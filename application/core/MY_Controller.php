@@ -1,5 +1,4 @@
-<?php if (!defined('BASEPATH')) {exit('No direct script access allowed');
-}
+<?php  defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
  * Created by PhpStorm.
@@ -9,11 +8,17 @@
  */
 class MY_Controller extends CI_Controller {
 
+    protected static $pageSize = 10;
+    public $_G = array(
+        'title'=>'部署系统'
+    );
+
 	public function __construct() {
 		parent::__construct();
+        $this->load->language('deploy');
 	}
 
-	static public function jsonMsg($code, $data_msg = '',$callback = false, $type = false) {
+	static public function jsonMsg($code, $data_msg = '', $type = false) {
 		$msg = array(
 			-1=> 'please login',
 			0 => 'error',
@@ -22,40 +27,14 @@ class MY_Controller extends CI_Controller {
 		);
 		$data['code'] = $code;
 		$data['msg'] = $code == 1?'success':(!empty($data_msg)?(string)$data_msg:(isset($msg[$code])?$msg[$code]:'error'));
-		$code != 1 || $data['data'] = $data_msg;
+		$code == 1 and $data['data'] = $data_msg;
 		if ($type) {
 			return $data;
 		} else {
-            echo $callback ? $callback.'('.json_encode($data).')' : json_encode($data);
+            echo json_encode($data);
 			exit;
 		}
 	}
-
-    public function view($temp,$data = array(),$wap=false){
-//        $this->load->library('mobile_Detect');
-//        if($this->mobile_detect->is('iOS') || $this->mobile_detect->is('AndroidOS') || strpos($_SERVER["SERVER_NAME"],'m.10wfuli.com') !== false)
-//        {
-//            define('ISWAP',true);
-//        }
-//        else
-//        {
-//            define('ISWAP',false);
-//        }
-        //if (!file_exists(VIEWPATH . $temp . '.php')) {
-        //    exit('no template');
-            //show_404();
-        //}
-        isset($data['title']) || $data['title'] = '';
-        $data['_G'] = $this->_G;
-        $wap && ISWAP && (file_exists(VIEWPATH . 'wap/'.$temp . '.php') ? $temp = 'wap/'.$temp : show_404());
-
-        //log_message('debug',$wap.'--'.intval(ISWAP).'--'.VIEWPATH . 'wap/'.$temp . '.php'.'--'.$temp);
-        //log_message('debug',serialize($_SERVER));
-        //$temp = $wap && file_exists(VIEWPATH . $temp . '.php') ? 'wap/'.$temp : $wap;
-        //$this->load->view('public/header', $data);
-        $this->load->view($temp, $data);
-        //$this->load->view('public/footer');
-    }
 
     protected function _chenkRePost($t=5){
         //if(self::$isAjax){
@@ -74,4 +53,28 @@ class MY_Controller extends CI_Controller {
             self::$isAjax ? self::jsonMsg(-1) : redirect('login/index');
         }
     }
+
+    protected function error($message,$code=0,$template=null,$data=null){
+        if($this->input->is_ajax_request()){
+            self::jsonMsg($code,$message);
+        }
+        $this->_G['message'] = $message;
+        $tpl = 'public/error';
+        if($template != null){
+            $tpl = $template;
+            $this->_G['tplVars'] = $data;
+        }
+        $str = $this->load->view($tpl,$this->_G,true);
+        echo $str;exit;
+    }
+
+    protected function success($message,$code=1){
+        if($this->input->is_ajax_request()){
+            self::jsonMsg($code,$message);
+        }
+        $this->_G['message'] = $message;
+        $str = $this->load->view('public/success',$this->_G,true);
+        echo $str;exit;
+    }
+
 }

@@ -1,10 +1,4 @@
-<?php
-/**
- * Created by PhpStorm.
- * @author wuxin
- * @date 2015 15/6/22 下午1:31
- * @copyright 7659.com
- */
-?>
+<?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
+</div>
 </body>
 </html>

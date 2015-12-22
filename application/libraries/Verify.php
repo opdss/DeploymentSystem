@@ -1,4 +1,4 @@
-<?php
+<?php defined('BASEPATH') OR exit('No direct script access allowed');
 /**
  * Created by PhpStorm.
  * @author wuxin
@@ -18,7 +18,7 @@ class Verify{
     后面八位为：
     0-9位的数字
      */
-    public function pregPhone($test){
+    static public function pregPhone($test){
         $rule  = "/^((13[0-9])|147|(15[0-35-9])|170|180|182|183|(18[5-9]))[0-9]{8}$/A";
         return (bool)preg_match($rule,$test);
     }
@@ -30,7 +30,7 @@ class Verify{
     @之后到.之前是 1到多个大小写字母或者数字的字符串
     .之后是 1到多个 大小写字母或者数字或者.的字符串
      */
-    public function pregEmail($test){
+    static public function pregEmail($test){
         $rule = '/^[a-zA-Z0-9][a-zA-Z0-9._-]*\@[a-zA-Z0-9]+\.[a-zA-Z0-9\.]+$/A';
         return (bool)preg_match($rule,$test);
     }
@@ -42,7 +42,7 @@ class Verify{
     号码：7到8位的数字
     例如：(010) 12345678  或者 (010)12345678 或者 010  12345678 或者 010--12345678
      */
-    public function pregTelphone($test){
+    static public function pregTelphone($test){
         $rule = '/^(\(((010)|(021)|(0\d{3,4}))\)( ?)([0-9]{7,8}))|((010|021|0\d{3,4}))([- ]{1,2})([0-9]{7,8})$/A';
         return (bool)preg_match($rule,$test);
     }
@@ -65,7 +65,7 @@ class Verify{
     文件名：可有可无，由大小写字母和数字组成
     参数:可有可无，存在则必须由?开头，即存在?开头就必须有相应的参数信息
      */
-    public function pregURL($test){
+    static public function pregURL($test){
         $rule = '/^(([a-zA-Z]+)(:\/\/))?([a-zA-Z]+)\.(\w+)\.([\w.]+)(\/([\w]+)\/?)*(\/[a-zA-Z0-9]+\.(\w+))*(\/([\w]+)\/?)*(\?(\w+=?[\w]*))*((&?\w+=?[\w]*))*$/';
         return (bool)preg_match($rule,$test);
     }
@@ -74,7 +74,7 @@ class Verify{
     规则：
     15位纯数字或者18位纯数字或者17位数字加一位x
      */
-    public function pregIC($test){
+    static public function pregIC($test){
         $rule = '/^(([0-9]{15})|([0-9]{18})|([0-9]{17}x))$/';
         return (bool)preg_match($rule,$test);
     }
@@ -87,7 +87,7 @@ class Verify{
      **4可以是一位的 1-9，两位的01-99，三位的001-255
     四个参数必须存在
      */
-    public function pregIP($test){
+    static public function pregIP($test){
         $rule = '/^((([1-9])|((0[1-9])|([1-9][0-9]))|((00[1-9])|(0[1-9][0-9])|((1[0-9]{2})|(2[0-4][0-9])|(25[0-5]))))\.)((([0-9]{1,2})|(([0-1][0-9]{2})|(2[0-4][0-9])|(25[0-5])))\.){2}(([1-9])|((0[1-9])|([1-9][0-9]))|(00[1-9])|(0[1-9][0-9])|((1[0-9]{2})|(2[0-4][0-9])|(25[0-5])))$/';
         return (bool)preg_match($rule,$test);
     }
@@ -105,7 +105,7 @@ class Verify{
     分钟：0到9的一位数；0到5开头的两位数，个位是0到9；
     分钟：0到9的一位数；0到5开头的两位数，各位是0到9
      */
-    public function pregTime($test){
+    static public function pregTime($test){
         $rule ='/^(([1-2][0-9]{3}-)((([1-9])|(0[1-9])|(1[0-2]))-)((([1-9])|(0[1-9])|([1-2][0-9])|(3[0-1]))))( ((([0-9])|(([0-1][0-9])|(2[0-3]))):(([0-9])|([0-5][0-9]))(:(([0-9])|([0-5][0-9])))?))?$/';
         return (bool)preg_match($rule,$test);
     }

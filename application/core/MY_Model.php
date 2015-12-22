@@ -1,4 +1,4 @@
-<?php
+<?php defined('BASEPATH') OR exit('No direct script access allowed');
 /**
  * Created by PhpStorm.
  * @author wuxin
@@ -31,7 +31,7 @@ class MY_Model extends CI_Model{
             foreach($update as $item){
                 isset($increment[$item]) ? $this->db->set($item, $increment[$item],false) : $this->db->set($item, $data[$item]);
             }
-            return $this->db->insert('mytable');
+            return $this->db->replace($tbname);
         }
     }
 
@@ -57,10 +57,10 @@ class MY_Model extends CI_Model{
     }
 
     public function getList($tbname,$param = array()){
-        $param = array_merge(array('limit'=>array(),'select'=>'*','where'=>'','order'=>''),$param);
+        $param = array_merge(array('limit'=>array(),'select'=>'*','where'=>'','order'=>'','callback'=>null),$param);
         $select = is_array($param['select']) ? implode(',',$param['select']) : $param['select'];
         $this->db->select($select);
-        empty($param['where']) || $this->db->where($param['where']);
+        empty($param['where']) or $this->db->where($param['where']);
         if(!empty($param['order'])){
             if(is_array($param['order'])){
                foreach($param['order'] as $k=>$v){
@@ -70,15 +70,19 @@ class MY_Model extends CI_Model{
                 $this->db->order_by($param['order']);
             }
         }
-        empty($param['limit']) || $this->db->limit($param['limit'][1],$param['limit'][0]);
-        return $this->db->get($tbname)->result_array();
+        empty($param['limit']) or $this->db->limit($param['limit'][1],$param['limit'][0]);
+        $data = $this->db->get($tbname)->result_array();
+        if($param['callback'] !== null && !empty($data)){
+            $data = array_map($param['callback'],$data);
+        }
+        return $data;
     }
 
     public function getOne($tbname,$param = array()){
         $param = array_merge(array('select'=>'*','where'=>'','order'=>''),$param);
         $select = is_array($param['select']) ? implode(',',$param['select']) : $param['select'];
         $this->db->select($select);
-        empty($param['where']) || $this->db->where($param['where']);
+        empty($param['where']) or $this->db->where($param['where']);
         if(!empty($param['order'])){
             if(is_array($param['order'])){
                 foreach($param['order'] as $k=>$v){
@@ -90,6 +94,10 @@ class MY_Model extends CI_Model{
         }
         $this->db->limit(1);
         return $this->db->get($tbname)->row_array();
+    }
+
+    public function delete($tbname,$where){
+        return $this->db->delete($tbname,$where);
     }
 
 }
