@@ -282,7 +282,7 @@ else
 
 define('VIEWPATH', $view_folder);
 define('TIMESTAMP',time());
-
+//var_dump(ini_get('memory_limit'));exit;
 /*
  * --------------------------------------------------------------------
  * LOAD THE BOOTSTRAP FILE

@@ -23,6 +23,7 @@ class Shell{
         $cmdOutput = array();
         $cmdReturn = 0;
         exec($cmd, $cmdOutput, $cmdReturn);
+        log_message('error',$cmd);
         return $cmdReturn != 0 ? false : $cmdOutput;
 
     }
@@ -32,6 +33,7 @@ class Shell{
         $info = array();
         $return = 0;
         exec($infoCmd, $info, $return);
+        log_message('error',$infoCmd);
         if ($return != 0 || sizeof($info) != 10) {
             log_message('error',$infoCmd);
             return '获取发布目录当前'.$revision.'SVN信息失败:'. implode("<br />", $info);
@@ -51,6 +53,7 @@ class Shell{
         $diffOutput = array();
         $diffReturn = 0;
         exec($diffCmd, $diffOutput, $diffReturn);
+        log_message('error',$diffCmd);
         if ($diffReturn != 0) {
             return 'Diff当前版本与上一版本失败:'. implode("<br />", $diffOutput);
         }
@@ -90,6 +93,7 @@ class Shell{
         $updateOutput = array();
         $updateReturn = 0;
         exec($updateCmd, $updateOutput, $updateReturn);
+        log_message('error',$updateCmd);
 
         if ($updateReturn != 0) {
             //renderError2('Diff当前版本与上一版本失败', implode("<br />", $updateOutput));
@@ -216,6 +220,7 @@ class Shell{
 
     static function multiExec($cmdList, $maxProcess = 24, $timeout = 15)
     {
+        array_map(function($a){log_message('error',$a);},$cmdList);
         if(empty($cmdList))
         {
             return False;

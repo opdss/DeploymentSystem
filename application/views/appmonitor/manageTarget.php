@@ -24,8 +24,8 @@
                 <td><?php echo $value['target']; ?></td>
                 <td><?php echo $value['name']; ?></td>
                 <td class="center">
-                    <a href="<?php echo site_url('monitor/editTarget/'.$tplVars['id'].'/'.$value['id'])?>" class="title">修改</a> &nbsp;
-                    <a onclick="javascript:return delConfirm()" href="<?php echo site_url('monitor/delTarget/'.$tplVars['id'].'/'.$value['id']);?>" id="delete_href" class="title">删除</a>&nbsp;
+                    <a href="<?php echo site_url('appmonitor/editTarget/'.$tplVars['id'].'/'.$value['id'])?>" class="title">修改</a> &nbsp;
+                    <a onclick="javascript:return delConfirm()" href="<?php echo site_url('appmonitor/delTarget/'.$tplVars['id'].'/'.$value['id']);?>" id="delete_href" class="title">删除</a>&nbsp;
                 </td>
             </tr>
         <?php } ?>
@@ -41,7 +41,7 @@
 
     jQuery(function($) {
         $('#add_button').click(function() {
-            window.location.href='<?php echo site_url('monitor/addTarget/'.$tplVars['id'])?>'
+            window.location.href='<?php echo site_url('appmonitor/addTarget/'.$tplVars['id'])?>'
         });
     });
 </script>

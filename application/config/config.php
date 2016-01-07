@@ -212,7 +212,7 @@ $config['directory_trigger'] = 'd';
 |
 */
 //$config['log_threshold'] = ENVIRONMENT=='production' ? 1 : 2;
-$config['log_threshold'] = 2;
+$config['log_threshold'] = 1;
 
 /*
 |--------------------------------------------------------------------------

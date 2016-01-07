@@ -12,7 +12,7 @@
         <div class="contenttitle2">
             <h3>新增监控地址</h3>
         </div><!--contenttitle-->
-        <form class="stdform stdform2" method="post" id="project_form" action="<?php echo site_url('monitor/addTarget/'.$tplVars['appMonitorItemId'].'/save')?>">
+        <form class="stdform stdform2" method="post" id="project_form" action="<?php echo site_url('appmonitor/addTarget/'.$tplVars['appMonitorItemId'].'/save')?>">
             <p>
                 <label>监控地址</label>
                 <span class="field"><input type="text" name="target" class="mediuminput" value=""/>

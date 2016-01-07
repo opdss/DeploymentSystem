@@ -60,15 +60,15 @@ class Host extends MY_Controller{
             $data = $this->_verifyInputHostInfo();
             $count = $this->host_model->getTotal('host',array('ip'=>$data['ip']));
             if($count>0){
-                $this->error('主机IP已经存在');
+                $this->error(lang('host_ip_already_exists'));
             }
             $this->load->library('shell');
             if(!Shell::checkPing($data['ip'])){
-                $this->error('你输入的主机IP不可用,不能ping通');
+                $this->error(lang('host_ping_ip_error'));
             }
             $data['createTime'] = $data['updateTime']= TIMESTAMP;
             $hostId = $this->host_model->insertKeyUp('host',$data);
-            $this->success('主机增加成功,hostid = '.$hostId);
+            $this->success(lang('host_add_success').',id = '.$hostId);
         }
         $tplVars['idcs'] = self::getIdcs();
         $this->_G['tplVars'] = $tplVars;
@@ -83,11 +83,11 @@ class Host extends MY_Controller{
 
     //主机删除被OPS收回，删除主机记录并删除与项目的绑定关系
     function del($id=0){
-        ($id = intval($id)) or $this->error('主机id错误');
+        ($id = intval($id)) or $this->error(lang('host_id_error'));
         $del1 = $this->host_model->delete('host',array('id'=>$id));
         $del2 = $this->host_model->delete('project_host',array('hostId'=>$id));
-        if($del1 && !$del2){
-            $this->success('主机删除成功');
+        if($del1 && $del2){
+            $this->success(lang('host_del_success'));
         }else{
             if(!$del1){
                 $log = 'Delete host record failed  && delete bindInfo in project_host success where host_id = '. $id;
@@ -95,7 +95,7 @@ class Host extends MY_Controller{
                 $log = 'Delete host record success  && delete bindInfo in project_host failed where host_id = '. $id;
             }
             log_message('error',$log);
-            $this->error('主机删除失败');
+            $this->error(lang('host_del_error'));
         }
     }
 
@@ -106,14 +106,14 @@ class Host extends MY_Controller{
             if(!empty($res)){
                 $this->load->library('shell');
                 if(!Shell::checkPing($data['ip'])){
-                    $this->error('你输入的主机IP不可用,不能ping通');
+                    $this->error(lang('host_ping_ip_error'));
                 }
             }else{
-                $res['id'] != $id and $this->error('主机IP已经存在');
+                $res['id'] != $id and $this->error(lang('host_ip_already_exists'));
             }
             $data['updateTime']= TIMESTAMP;
             $this->host_model->update('host',$data,array('id'=>$id));
-            $this->success('主机修改成功,hostid = '.$id);
+            $this->success(lang('host_edit_success').',hostid = '.$id);
         }
         $detail = $this->_getHostInfo($id);
         $this->_G['tplVars']['recordDetail'] = $detail;
@@ -122,9 +122,9 @@ class Host extends MY_Controller{
     }
     //下线主机，将主机status置0，部署时要判断主机的状态
     function offline($id=0){
-        ($id = intval($id)) or $this->error('主机id错误');
+        ($id = intval($id)) or $this->error(lang('host_id_error'));
         $res = $this->host_model->update('host',array('status'=>0,'updateTime'=>TIMESTAMP),array('id'=>$id));
-        $res ? $this->success('主机下线成功') : $this->error('主机下线失败');
+        $res ? $this->success(lang('host_offline_success')) : $this->error(lang('host_offline_error'));
     }
     // 获取主机的机房列表
     private static function getIdcs(){
@@ -137,11 +137,14 @@ class Host extends MY_Controller{
             'cm22',
             'local',
             'local22',
+            '本地虚拟机',
+            '本地主机',
+            '阿里云机器',
         );
     }
     //获取某个主机相关信息
     private function _getHostInfo(&$id,$getBindProjects=true){
-        ($id = intval($id)) or $this->error('主机id错误');
+        ($id = intval($id)) or $this->error(lang('host_id_error'));
         $detail = $this->host_model->getOne('host',array('where'=>array('id'=>$id)));
         if(empty($detail)){
             $this->error('没有该主机信息');
@@ -155,7 +158,7 @@ class Host extends MY_Controller{
     private function _verifyInputHostInfo(&$id=null){
         $data = array();
         if($id !== null){
-            ($id = intval($id)) or $this->error('主机id错误');
+            ($id = intval($id)) or $this->error(lang('host_id_error'));
             $data['id'] = $id;
         }
         foreach(array(
@@ -167,22 +170,22 @@ class Host extends MY_Controller{
                 ) as $val){
             $data[$val] = $this->input->post($val);
             if(strlen($data[$val]) == 0){
-                $this->error($val.'不应为空');
+                $this->error(lang($val).lang('field_empty'));
             }
         }
 
         if (!in_array($data['idc'],$this->getIdcs())) {
-            $this->error('机房信息输入有误');
+            $this->error(lang('host_idc_error'));
         }
         $this->load->library('verify');
         if (!verify::pregIP($data['ip'])) {
-            $this->error('IP地址格式不正确');
+            $this->error(lang('host_ip_error'));
         }
         if ($data['status'] != '0' && $data['status'] != '1') {
-            $this->error('主机状态输入不正确');
+            $this->error(lang('host_status_error'));
         }
         if ($data['predeploy'] != '0' && $data['predeploy'] != '1') {
-            $this->error('预发布机状态输入不正确');
+            $this->error(lang('host_predeploy_error'));
         }
         return $data;
     }

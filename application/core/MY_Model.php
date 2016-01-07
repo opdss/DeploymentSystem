@@ -26,7 +26,7 @@ class MY_Model extends CI_Model{
 
     public function insertKeyUp($tbname,$data,$update=array(),$increment=array()){
         if(empty($update)) {
-            return $this->db->insert($tbname, $data) ? $this->db->insert_id() : 0;
+            return $this->db->insert($tbname, $data) ? (($res = $this->db->insert_id()) ? $res : true) : 0;
         }else{
             foreach($update as $item){
                 isset($increment[$item]) ? $this->db->set($item, $increment[$item],false) : $this->db->set($item, $data[$item]);

@@ -74,7 +74,7 @@ $updateStatus = array('A' => '新增', 'D' => '删除', 'U' => '更新', 'C' => 
     <ul class="buttonlist floatright">
         <li><button class="stdbtn" onclick="location.href='<?php echo site_url('project/index');?>'">回到项目列表</button></li>
 
-        <li><button class="stdbtn" onclick="location.href='<?php echo site_url('check_monitor/GetMonitorData/'.$projectInfo['id'])?>'">查看数据曲线和日志输出</button></li>
+        <li><button class="stdbtn" onclick="location.href='<?php echo site_url('check_monitor/GetMonitorData/'.$tplVars['projectInfo']['id'])?>'">查看数据曲线和日志输出</button></li>
 
     </ul>
 </div>

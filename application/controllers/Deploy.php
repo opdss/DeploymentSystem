@@ -23,17 +23,17 @@ class Deploy extends MY_Controller{
         if (!is_dir($deployPath)) {
             // 创建发布目录
             if (!@mkdir($deployPath, DIR_WRITE_MODE, True)) {
-                $this->error('创建发布目录"' . $deployPath . '"失败,请检查权限。');
+                $this->error(str_replace('{$deployPath}',$deployPath,lang('deploy_mkdir_deploypath_error')));
             }
         }
         if (!is_dir($deployPath . DIRECTORY_SEPARATOR . '.svn')) {
             // 检出SVN代码到发布目录
             $res = Shell::svnCheckOut($svnUrl,$deployPath);
             if($res === false){
-                $this->error('检出上线SVN"' . $svnUrl . '"失败,请检查权限。');
+                $this->error(str_replace('{$svnUrl}',$svnUrl,lang('deploy_svn_checkout_error')));
             }
         }
-        $this->success('项目初始化成功');
+        $this->success(lang('deploy_init_success'));
     }
     //对项目进行diff
     function diff($id=0){
@@ -44,6 +44,9 @@ class Deploy extends MY_Controller{
         $deployPath  = $projectInfo['deployPath'];
 
         // 判断预发布机和发布机的绑定信息
+        if(empty($projectInfo['bindHosts'])){
+            $this->error(lang('deploy_bind_host_no'));
+        }
         $hasPredeploy = count($projectInfo['bindHosts']['predeployHosts']) > 0 ? true : false;
         $hasDeploy    = count($projectInfo['bindHosts']['deployHosts']) > 0 ? true : false;
 
@@ -110,14 +113,14 @@ class Deploy extends MY_Controller{
         //$hasDeploy    = count($deployHosts) > 0 ? True : false;
 
         if ($deployHosts == false) {
-            $this->error('该项目尚未绑定任何发布机器');
+            $this->error(lang('deploy_bind_host_no'));
         }
         if ($toRevision === false || $prevRevision === false) {
-            $this->error('非法的上下文环境,版本号信息缺失');
+            $this->error(lang('deploy_unlawful'));
         }
         // 获取部署锁,防止冲突
         if (!$this->deploy_model->checkDeployLock($id,$this->_G['userInfo']['id'])) {
-            $this->error('您尚未持有部署锁或者已经失效');
+            $this->error(lang('deploy_lock_error'));
         }
 
         $updateInfo = Shell::svnUpdate($projectInfo['deployPath'], $toRevision);
@@ -403,7 +406,7 @@ class Deploy extends MY_Controller{
         $sessions = $this->deploy_model->getList('deploy_session',array('where'=>'projectId=' . $projectId . ' AND userId !=' . $userInfo['id']));
         if (sizeof($sessions)>0) {
             $this->error(
-                '探测到有多个同学进入该项目的部署流程,请进行口头沟通选择本次部署人员',
+                lang('deploy_project_user_already_exists'),
                 0,
                 'deploy/session',
                 array('sessions'=>$sessions,'projectId'=>$projectId)
@@ -434,10 +437,10 @@ class Deploy extends MY_Controller{
     //部署前检查
     private function _deployCheck($projectInfo,$clearlock=true){
         if (!is_dir($projectInfo['deployPath'])) {
-            $this->error('项目尚未初始化,发布目录"' . $projectInfo['deployPath'] . '"不存在');
+            $this->error(str_replace('{$deployPath}',$projectInfo['deployPath'],lang('deploy_init_no')));
         }
         if (!is_dir($projectInfo['deployPath'] . DIRECTORY_SEPARATOR . '.svn')) {
-            renderError('项目尚未初始化,代码仓库"' . $projectInfo['svnUrl'] . '"未检出到发布目录');
+            $this->error(str_replace('{$svnUrl}',$projectInfo['svnUrl'],lang('deploy_svn_init_no')));
         }
         // 强制清理其他部署会话
         // 强制释放本人持有的锁或别人的锁
@@ -449,12 +452,12 @@ class Deploy extends MY_Controller{
     private function _getProjectInfo(&$id,$getBindHosts=true){
         ($id = intval($id)) or $this->error(lang('project_id_error'));
         if (!$this->deploy_model->checkProjectUserBind($id,$this->_G['userInfo']['id'])) {
-            $this->error('你没有该项目的部署权限');
+            $this->error(lang('deploy_auth_no'));
         }
         $this->load->model('project_model');
         $detail = $this->project_model->getOne('project',array('where'=>array('id'=>$id)));
         if(empty($detail)){
-            $this->error('没有该项目信息');
+            $this->error(lang('project_info_no'));
         }
         if($getBindHosts and $detail['bindHosts'] = $this->project_model->getBindHosts($id)){
             $detail['bindHosts'] = array_reduce(

@@ -28,9 +28,9 @@
                 <td><?php echo $value['checkinterval']?></td>
                 <td><?php echo $value['maillist']?></td>
                 <td class="center">
-                    <a href="<?php echo site_url('monitor/editItem/'.$value['id'])?>" class="title">修改</a> &nbsp;
-                    <a href="<?php echo site_url('monitor/manageTarget/'.$value['id'])?>" class="title">管理监控地址</a> &nbsp;
-                    <a onclick="javascript:return delConfirm()" href="<?php echo site_url('monitor/delItem/'.$value['id'])?>" id="delete_href" class="title">删除</a>&nbsp;
+                    <a href="<?php echo site_url('appmonitor/editItem/'.$value['id'])?>" class="title">修改</a> &nbsp;
+                    <a href="<?php echo site_url('appmonitor/manageTarget/'.$value['id'])?>" class="title">管理监控地址</a> &nbsp;
+                    <a onclick="javascript:return delConfirm()" href="<?php echo site_url('appmonitor/delItem/'.$value['id'])?>" id="delete_href" class="title">删除</a>&nbsp;
                 </td>
             </tr>
         <?php } ?>
@@ -46,7 +46,7 @@
 
     jQuery(function($) {
         $('#add_button').click(function() {
-            window.location.href='<?php echo site_url('monitor/addItem')?>'
+            window.location.href='<?php echo site_url('appmonitor/addItem')?>'
         });
     });
 </script>

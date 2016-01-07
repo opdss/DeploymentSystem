@@ -37,6 +37,11 @@ class Project extends MY_Controller{
         $this->_G['tplVars'] = $tplVars;
         $this->load->view('project/project',$this->_G);
     }
+    //获取项目的详细信息
+    function show($id=0){
+        $this->_G['tplVars']['projectInfo'] = $this->_getProjectInfo($id);
+        $this->load->view('project/project',$this->_G);
+    }
     //增加项目记录
     function add($act=''){
         if ($act == 'save') {
@@ -45,23 +50,23 @@ class Project extends MY_Controller{
             $res2 = $this->project_model->getTotal('project',array('deployPath'=>$data['deployPath']));
             $res3 = $this->project_model->getTotal('project',array('prodPath'=>$data['prodPath']));
             if ($res1 > 0) {
-                $this->error('项目名已经存在');
+                $this->error(lang('project_name_already_exists'));
             }
             if ($res2 > 0) {
-                $this->error('部署路径已经存在');
+                $this->error(lang('project_deploy_path_already_exists'));
             }
             if ($res3 > 0) {
-                $this->error('线上代码路径已经存在');
+                $this->error(lang('project_line_path_already_exists'));
             }
             if (is_dir($data['deployPath'])) {
-                $this->error('该部署目录在部署服务器上已存在');
+                $this->error(lang('project_deploy_dir_already_exists'));
             }
             $data['createTime'] = $data['updateTime'] = TIMESTAMP;
             $res = $this->project_model->insertKeyUp('project',$data);
             if($res){
-                $this->success('项目增加成功,项目id='.$res);
+                $this->success(lang('project_add_success').',id='.$res);
             }else{
-                $this->error('插入数据库出错了');
+                $this->error(lang('db_insert_error'));
             }
         }
         $this->load->view('project/project', $this->_G);
@@ -74,9 +79,9 @@ class Project extends MY_Controller{
         $del2 = $this->host_model->delete('project_host',array('projectId'=>$id));
         $del3 = $this->host_model->delete('user_project',array('projectId'=>$id));
         if($del1 && $del2 && $del3){
-            $this->success('项目删除成功');
+            $this->success(lang('project_del_success'));
         }else{
-            $this->error('项目删除失败');
+            $this->error(lang('project_del_error'));
         }
     }
 
@@ -87,16 +92,16 @@ class Project extends MY_Controller{
             $res2 = $this->project_model->getOne('project',array('where'=>array('deployPath'=>$data['deployPath']),'select'=>'id'));
             $res3 = $this->project_model->getOne('project',array('where'=>array('prodPath'=>$data['prodPath']),'select'=>'id'));
             if (isset($res1['id']) && $res1['id'] != $id) {
-                $this->error('项目名已经存在');
+                $this->error(lang('project_name_already_exists'));
             }
             if (isset($res2['id']) && $res2['id'] != $id) {
-                $this->error('部署路径已经存在');
+                $this->error(lang('project_deploy_path_already_exists'));
             }
             if (isset($res3['id']) && $res3['id'] != $id) {
-                $this->error('线上代码路径已经存在');
+                $this->error(lang('project_line_path_already_exists'));
             }
             $res = $this->project_model->update('project',$data,array('id'=>$id));
-            $res ? $this->success('项目修改成功') : $this->error('项目修改失败');
+            $res ? $this->success(lang('project_edit_success')) : $this->error(lang('project_edit_error'));
         }
         $this->_G['tplVars']['projectInfo'] = $this->_getProjectInfo($id);
         $this->load->view('project/project',$this->_G);
@@ -106,7 +111,7 @@ class Project extends MY_Controller{
         ($id = intval($id)) or $this->error(lang('project_id_error'));
         if($act == 'save'){
             $newBindHostIds = $this->input->post('newBindHosts');
-            empty($newBindHostIds) and $this->error('没有绑定主机,项目必须绑定主机以分发代码');
+            empty($newBindHostIds) and $this->error(lang('user_host_no'));
             $oldBindHostIds = $this->project_model->getList('project_host',array('select'=>'hostId','where'=>array('projectId'=>$id),'callback'=>function($arr){return $arr['hostId'];}));
             //$oldBindHostIds = array_reduce($oldBindHostIds,function($a,$b){static $i=0;$a[$i] = $b['hostId'];$i++;return $a;});
             //求交集去一条条增加或者删除绑定信息
@@ -122,12 +127,12 @@ class Project extends MY_Controller{
                     $this->project_model->delete('project_host',array('projectId'=>$id,'hostId'=>$val));
                 }
             }
-            $this->success('主机绑定成功');
+            $this->success(lang('project_bind_success'));
         }
 
         $tplVars['projectInfo'] = $this->project_model->getOne('project',array('where'=>array('id'=>$id)));
         if(empty($tplVars['projectInfo'])){
-            $this->error('没有该项目记录');
+            $this->error(lang('project_info_no'));
         }
         //获取已经绑定的HOST列表
         $tplVars['haveBindHosts'] = $this->project_model->getBindHosts($id);
@@ -146,10 +151,6 @@ class Project extends MY_Controller{
         $this->_G['tplVars'] = $tplVars;
         $this->load->view('project/project',$this->_G);
     }
-
-    function deploy($id=0){}
-
-    function rollBack($id=0){}
 
     //检验提交上来的项目数据
     private function _verifyInputProjectInfo(&$id=null){
@@ -170,7 +171,7 @@ class Project extends MY_Controller{
                 ) as $key=>$val){
             $data[$key] = $this->input->post($key);
             if(strlen($data[$key]) == 0 && $val[0] == 1){
-                $this->error($key.'字段不应为空');
+                $this->error(lang($key).lang('field_empty'));
             }
         }
         return $data;
@@ -180,7 +181,7 @@ class Project extends MY_Controller{
         ($id = intval($id)) or $this->error(lang('project_id_error'));
         $detail = $this->project_model->getOne('project',array('where'=>array('id'=>$id)));
         if(empty($detail)){
-            $this->error('没有该项目信息');
+            $this->error(lang('project_info_no'));
         }
         $getBindHosts and $detail['bindHosts'] = $this->project_model->getBindHosts($id);
         return $detail;

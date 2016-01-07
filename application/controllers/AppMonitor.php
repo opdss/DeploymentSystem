@@ -7,7 +7,7 @@
  */
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Monitor extends MY_Controller{
+class AppMonitor extends MY_Controller{
 
     function __construct(){
         parent::__construct();
@@ -16,7 +16,7 @@ class Monitor extends MY_Controller{
     //项目监控主页面，显示有权限的项目监控列表
     function index(){
         $this->_G['tplVars']['recordsArray'] = $this->monitor_model->getMonitorList($this->_G['userInfo']['id']);
-        $this->load->view('monitor/monitor',$this->_G);
+        $this->load->view('appmonitor/appmonitor',$this->_G);
     }
 
     function addItem($act=''){
@@ -50,7 +50,7 @@ class Monitor extends MY_Controller{
                 $this->error('插入数据库出错:user_app_monitor');
             }
         }
-        $this->load->view('monitor/monitor',$this->_G);
+        $this->load->view('appmonitor/appmonitor',$this->_G);
     }
 
     function editItem($id=0,$act=''){
@@ -64,7 +64,7 @@ class Monitor extends MY_Controller{
         if(empty($this->_G['tplVars']['appMonitorInfo'])){
             $this->error('没有该项目记录');
         }
-        $this->load->view('monitor/monitor',$this->_G);
+        $this->load->view('appmonitor/appmonitor',$this->_G);
     }
 
     function delItem($id=0){
@@ -83,7 +83,7 @@ class Monitor extends MY_Controller{
         $tplVars['urlResult'] = $this->monitor_model->getList('app_monitor_target',array('where'=>array('appMonitorItemId'=>$itemId)));
         $tplVars['id'] = $itemId;
         $this->_G['tplVars'] = $tplVars;
-        $this->load->view('monitor/monitor',$this->_G);
+        $this->load->view('appmonitor/appmonitor',$this->_G);
     }
 
     function addTarget($itemId=0, $act=''){
@@ -99,7 +99,7 @@ class Monitor extends MY_Controller{
         }
         ($itemId = intval($itemId)) or $this->error('item ID 错误');
         $this->_G['tplVars']['appMonitorItemId'] = $itemId;
-        $this->load->view('monitor/monitor',$this->_G);
+        $this->load->view('appmonitor/appmonitor',$this->_G);
     }
 
     function editTarget($itemId=0, $targetId=0, $act=''){
@@ -113,7 +113,7 @@ class Monitor extends MY_Controller{
         if(empty($this->_G['tplVars']['appTargetInfo'])){
             $this->error('没有该项目记录');
         }
-        $this->load->view('monitor/monitor',$this->_G);
+        $this->load->view('appmonitor/appmonitor',$this->_G);
     }
 
     function delTarget($itemId=0, $targetId=0){

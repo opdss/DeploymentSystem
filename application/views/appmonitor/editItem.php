@@ -4,7 +4,7 @@
         <div class="contenttitle2">
             <h3>应用监控编辑</h3>
         </div><!--contenttitle-->
-        <form class="stdform stdform2" method="post" action="<?php echo site_url('monitor/editItem/'.$tplVars['appMonitorInfo']['id'].'/save');?>">
+        <form class="stdform stdform2" method="post" action="<?php echo site_url('appmonitor/editItem/'.$tplVars['appMonitorInfo']['id'].'/save');?>">
             <p>
                 <label>项目名</label>
                 <span class="field"><input type="text" name="name" class="mediuminput" value="<?php echo $tplVars['appMonitorInfo']['name']?>" />

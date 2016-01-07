@@ -60,7 +60,7 @@ class User extends MY_Controller{
     function del($id=0){
         ($id = intval($id)) or $this->error(lang('user_id_error'));
         if($id == $this->_G['userInfo']['id']){
-            $this->error('你不能删除你自己');
+            $this->error(lang('user_not_del_self'));
         }
         $del1 = $this->user_model->delete('user',array('id'=>$id));
         $del2 = $this->user_model->delete('user_project',array('userId'=>$id));
@@ -87,8 +87,8 @@ class User extends MY_Controller{
             $data['password'] = $data['password'] == $userInfo['password'] ? $data['password'] : md5($data['password']);
             $data['updateTime'] = TIMESTAMP;
             $this->user_model->update('user',$data,array('id'=>$id))
-                ? $this->success('用户信息修改成功')
-                : $this->error('用户信息修改失败');
+                ? $this->success(lang('user_edit_success'))
+                : $this->error(lang('user_edit_error'));
         }
         $this->_G['tplVars']['userInfo'] = $userInfo;
         $this->load->view('user/user',$this->_G);
@@ -99,7 +99,7 @@ class User extends MY_Controller{
         if($act == 'save'){
             $newPermitOps = $this->input->post('newPermitOps');
             if(empty($newPermitOps)){
-                $this->error('没有为用户赋予任何操作权限');
+                $this->error(lang('user_privilege_no'));
             }
             $oldPermitOps = $this->user_model->getList(
                 'privilege',
@@ -122,13 +122,13 @@ class User extends MY_Controller{
                     $this->user_model->delete('privilege',array('userId'=>$id,'permitOperator'=>$v));
                 }
             }
-            $this->success('给用户赋予操作权限成功');
+            $this->success(lang('user_privilege_success'));
         }
 
 
         $userInfo = $this->user_model->getOne('user',array('where'=>array('id'=>$id)));
         if(empty($userInfo)){
-            $this->error('没有用户的信息记录');
+            $this->error(lang('user_info_no'));
         }
 
         $_permitOperators = $this->user_model->getList('privilege', array('where' => array('userId'=>$id)));
@@ -161,7 +161,7 @@ class User extends MY_Controller{
             $newBindPrjIds = $this->input->post('newBindProjects');
             if(empty($newBindPrjIds)){
                 $this->user_model->delete('user_project',array('userId'=>$id));
-                $this->success('为用户删除所有部署项目权限成功');
+                $this->success(lang('user_del_bind_project_success'));
             }
             $oldBindPrjIds = $this->user_model->getList(
                 'user_project',
@@ -184,11 +184,11 @@ class User extends MY_Controller{
                     $this->user_model->delete('user_project',array('userId'=>$id,'projectId'=>$v));
                 }
             }
-            $this->success('给用户赋予监控项目权限成功');
+            $this->success(lang('user_add_bind_project_success'));
         }
         $userInfo = $this->_getUserInfo($id);
         if(empty($userInfo)){
-            $this->error('没有用户的信息记录');
+            $this->error(lang('user_info_no'));
         }
         //获取未绑定的HOST列表
         $where = empty($userInfo['bindProjects'])
@@ -211,7 +211,7 @@ class User extends MY_Controller{
     }
 
 
-    //检验提交上来的项目数据
+    //检验提交上来的用户数据
     private function _verifyInputUserInfo(&$id=null){
         $data = array();
         if($id !== null){
@@ -225,12 +225,13 @@ class User extends MY_Controller{
                     'email' => array(1),
                 ) as $key=>$val){
             $data[$key] = $this->input->post($key);
-            if(strlen($data[$key]) == 0 && $val[0] == 0){
-                $this->error($val.'字段不应为空');
+            if(strlen($data[$key]) == 0 && $val[0] == 1){
+                $this->error(lang($key).lang('field_empty'));
             }
         }
         return $data;
     }
+    /*
     //检验提交上来的权限数据
     private function _verifyInputPrivilege(&$id=null){
         $data = array();
@@ -251,12 +252,12 @@ class User extends MY_Controller{
         }
         return $data;
     }
-
+    */
     private function _getUserInfo(&$id){
         ($id = intval($id)) or $this->error(lang('user_id_error'));
         $detail = $this->user_model->getOne('user',array('where'=>array('id'=>$id)));
         if(empty($detail)){
-            $this->error('没有该用户信息');
+            $this->error(lang('user_info_no'));
         }
         $detail['bindProjects'] = $this->user_model->getUserProjects($id);
         return $detail;

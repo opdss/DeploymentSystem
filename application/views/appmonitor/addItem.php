@@ -12,7 +12,7 @@
         <div class="contenttitle2">
             <h3>新增监控</h3>
         </div><!--contenttitle-->
-        <form class="stdform stdform2" method="post" id="project_form" action="<?php echo site_url('monitor/addItem/save');?>">
+        <form class="stdform stdform2" method="post" id="project_form" action="<?php echo site_url('appmonitor/addItem/save');?>">
             <p>
                 <label>项目名</label>
                 <span class="field"><input type="text" name="name" class="mediuminput" value=""/></span>

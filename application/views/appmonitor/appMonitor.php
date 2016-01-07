@@ -4,7 +4,7 @@
 ?>
     <div class="centercontent">
         <?php
-        include(VIEWPATH.'monitor/'.$this->router->method.'.php');
+        include(VIEWPATH.'appmonitor/'.$this->router->method.'.php');
         ?>
     </div>
     <script type="text/javascript" src="<?php echo base_url('source/js/custom/elements.js')?>"></script>

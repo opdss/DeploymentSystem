@@ -5,6 +5,9 @@
  * @date 2015 15/12/3 下午2:34
  * @copyright 7659.com
  */
+$config['notAuth'] = array(
+    'login', //登陆模块
+);
 
 $config['manageAuth'] = array(
     'project' => array(
@@ -15,9 +18,6 @@ $config['manageAuth'] = array(
         'edit' => '修改项目',
         'show' => '查看项目',
         'bindHost' => '绑定主机',
-        'init' => '初始化',
-        'deploy' => '部署',
-        'rollBack' => '回滚',
     ),
     'host' => array(
         '_all' => '主机管理',
@@ -38,13 +38,50 @@ $config['manageAuth'] = array(
         'privilege' => '操作权限',
         'bindProject' => '管理主机',
     ),
-    'deploy_log' => array(
+    'logs' => array(
         '_all' => '部署日志',
+        'index' => '日志列表',
+        'show' => '部署日志',
+        'rsyncLog' => '推送日志',
     ),
-    'monitor' => array(
+    'deploy' => array(
+        '_all' => '部署行为',
+        'init' => '初始化',
+        'diff' => 'diff检查',
+        'confirm' => 'hosts确认',
+        'commit' => '推送更新',
+        'rollBack' => '回滚',
+    ),
+    'appMonitor' => array(
+        '_all' => '应用监控',
+        'index' => '监控',
+        'addItem' => '监控',
+        'editItem' => '监控',
+        'delItem' => '监控',
+        'manageTarget' => '监控',
+        'addTarget' => '监控',
+        'editTarget' => '监控',
+        'delTarget' => '监控',
+    ),
+    'front_monitor' => array(
         '_all' => '服务监控',
     ),
-    'app_monitor' => array(
+);
+
+$config['manageMenu'] = array(
+    'project' => array(
+        '_all' => '项目管理',
+    ),
+    'host' => array(
+        '_all' => '主机管理',
+    ),
+    'user' => array(
+        '_all' => '用户管理',
+    ),
+    'logs' => array(
+        '_all' => '部署日志',
+    ),
+    'appMonitor' => array(
         '_all' => '应用监控',
     ),
 );

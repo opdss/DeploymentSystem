@@ -9,20 +9,22 @@ class ManageAuth {
 
     private $CI;
     private $auth;
-    private $notAuth = array(
-        'login'
-    );
+    private $notAuth;
+    private $menu;
 
     public function __construct() {
         $this->CI = &get_instance();
         $this->CI->load->config('manage_auth');
         $this->CI->auth = $this->CI->config->item('manageAuth');
+        $this->notAuth = $this->CI->config->item('notAuth');
+        $this->menu = $this->CI->config->item('manageMenu');
     }
     /**
      * 权限认证
      */
     public function auth() {
         //$this->CI->session->set_userdata('userInfo',array('id'=>10,'username'=>'wuxin','email'=>'opdss@qq.com'));
+        //var_dump($this->notAuth);exit;
         if(in_array($this->CI->router->class,$this->notAuth)){return;}
         $userInfo = $this->CI->session->userdata('userInfo');
         if(empty($userInfo)){
@@ -93,10 +95,12 @@ class ManageAuth {
         foreach($privilege as $val){
             $p = explode('.',$val);
             //isset($this->CI->auth[$p[0]])
-            if(!isset($menu[$p[0]])){
-                $menu[$p[0]]['_all'] = $this->CI->auth[$p[0]]['_all'];
+            if(!isset($menu[$p[0]]) && isset($this->menu[$p[0]])){
+                //$menu[$p[0]]['_all'] = $this->CI->auth[$p[0]]['_all'];
+                $menu[$p[0]]['_all'] = $this->menu[$p[0]]['_all'];
             }
-            $menu[$p[0]][$p[1]] = $this->CI->auth[$p[0]][$p[1]];
+            //$menu[$p[0]][$p[1]] = $this->CI->auth[$p[0]][$p[1]];
+            //$menu[$p[0]][$p[1]] = $this->menu[$p[0]][$p[1]];
         }
         //var_dump($menu);exit;
         /*
