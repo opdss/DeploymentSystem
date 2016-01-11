@@ -53,6 +53,8 @@ $lang['project_bind_success'] = '主机绑定成功';
 
 $lang['project_add_success'] = '项目添加成功';
 $lang['project_add_error'] = '项目添加失败';
+$lang['project_edit_success'] = '项目修改成功';
+$lang['project_edit_error'] = '项目修改失败';
 $lang['project_del_success'] = '项目删除成功';
 $lang['project_del_error'] = '项目删除失败';
 
