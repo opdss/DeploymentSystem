@@ -26,6 +26,10 @@
                     <span class="field"><?php echo $tplVars['deployLogInfo']['newRevision']?></span>
                 </p>
                 <p>
+                    <label>部署类型</label>
+                    <span class="field"><?php echo $tplVars['deployLogInfo']['deployType'] ? '正式部署' : '预部署'?></span>
+                </p>
+                <p>
                     <label>部署时间</label>
                     <span class="field"><?php echo date('Y-m-d H:i:s', $tplVars['deployLogInfo']['deployTime']) ?></span>
                 </p>

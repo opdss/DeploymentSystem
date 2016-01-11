@@ -21,14 +21,13 @@
     </table>
     <ul class="buttonlist floatright">
         <li><button class="stdbtn" onclick="location.href='<?php echo site_url('deploy/index/'.$tplVars['projectId'])?>?clearlock=me'">回到项目列表</button></li>
-        <?php if( 'predeploy' == $tplVars['step'] ){?>
-            <li><button class="stdbtn btn_orange" onclick="commit('predeploy')">确认推送到线测机</button></li>
+        <?php if(!$tplVars['deployType']){?>
+            <li><button class="stdbtn btn_orange" onclick="commit(0)">确认推送到线测机</button></li>
             <?php
         }
-        elseif( 'deploy' == $tplVars['step'])
-        {
+        else{
             ?>
-            <li><button type="submit" class="stdbtn btn_red" onclick="commit('deploy')">确认推送到生产机</button></li>
+            <li><button type="submit" class="stdbtn btn_red" onclick="commit(1)">确认推送到生产机</button></li>
             <?php
         }
         ?>
@@ -38,7 +37,7 @@
     function commit(step)
     {
         var deleteopt =     document.getElementById("delete_option");
-        var url = "<?php echo site_url('deploy/commit/'.$tplVars['projectId'])?>?step="+step+"&referer=<?php echo $tplVars['referer']?>&delete=<?php echo $tplVars['delete']?>";
+        var url = "<?php echo site_url('deploy/'.(!$tplVars['deployType'] ? 'preCommit' : 'proCommit').'/'.$tplVars['projectId'])?>?step="+step+"&referer=<?php echo $tplVars['referer']?>&delete=<?php echo $tplVars['delete']?>";
         window.location.href=url;
     }
 </script>

@@ -88,14 +88,13 @@
     <ul class="buttonlist floatright">
         <li><input type="checkbox" id="delete_option" name="delete" /><span style="font-size:15px;">&nbsp; 是否删除服务端特有的文件？（如果不确定请忽略！）</span></li>
         <li><button class="stdbtn" onclick="location.href='<?php echo site_url('project/index')?>?frompid=<?php echo $tplVars['projectInfo']['id']?>&clearlock=me'">回到项目列表</button></li>
-        <?php if($tplVars['hasPredeploy']){?>
-            <li><button class="stdbtn btn_orange" onclick="commit('predeploy')">推送到线测机</button></li>
+        <?php if(!$tplVars['deployType']){?>
+            <li><button class="stdbtn btn_orange" onclick="commit(0)">推送到线测机</button></li>
             <?php
         }
-        elseif($tplVars['hasDeploy'])
-        {
+        else{
             ?>
-            <li><button type="submit" class="stdbtn btn_red" onclick="commit('deploy')">推送到生产机</button></li>
+            <li><button type="submit" class="stdbtn btn_red" onclick="commit(1)">推送到生产机</button></li>
             <?php
         }
         ?>
@@ -105,7 +104,7 @@
     function commit(step)
     {
         var deleteopt =     document.getElementById("delete_option");
-        var url = "<?php echo site_url('deploy/confirm/'.$tplVars['projectInfo']['id']);?>?step="+step+"&referer=diff&delete=" + deleteopt.checked;
+        var url = "<?php echo site_url('deploy/'.(!$tplVars['deployType'] ? 'preConfirm' : 'proConfirm').'/'.$tplVars['projectInfo']['id']);?>?step="+step+"&referer=diff&delete=" + deleteopt.checked;
         window.location.href=url;
     }
     jQuery(document).ready(function(){

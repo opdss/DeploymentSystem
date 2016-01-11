@@ -40,7 +40,7 @@
                         if ($k > 0)
                         {
                             ?>
-                            <a href="<?php echo site_url('deploy/diff/'.$deploy['projectId'])?>?revision=<?php echo $deploy['newRevision']?>" class="btn btn2 btn_cloud"><span>回滚到版本<?php echo $deploy['newRevision']?></span></a>
+                            <a href="<?php echo site_url('deploy/'.($tplVars['deployType'] ? 'proDiff' : 'preDiff').'/'.$deploy['projectId'])?>?revision=<?php echo $deploy['newRevision']?>" class="btn btn2 btn_cloud"><span>回滚到版本<?php echo $deploy['newRevision']?></span></a>
                             <?php
                         }
                         ?>

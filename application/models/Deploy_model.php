@@ -33,29 +33,30 @@ class Deploy_model extends MY_Model{
         return $query->result_array();
     }
     //清除用户部署锁
-    function releaseDeployLock($projectId,$userId,$me=true){
+    function releaseDeployLock($projectId, $userId, $me=true, $deployType=0){
         if ($me == True) {
-            $where = ' projectId=' . $projectId . ' AND userId=' . $userId;
+            $where = ' projectId=' . $projectId . ' AND userId=' . $userId . ' AND deployType='.$deployType;
         } else {
-            $where = ' projectId=' . $projectId . ' AND userId!=' . $userId;
+            $where = ' projectId=' . $projectId . ' AND userId!=' . $userId . ' AND deployType='.$deployType;
         }
         return $this->delete('deploy_session',$where);
     }
     // 检查是否持有项目部署锁
-    function checkDeployLock($projectId,$userId){
+    function checkDeployLock($projectId, $userId, $deployType=0){
         $res = $this->getOne(
             'deploy_session',
             array(
                 'where'=>array(
                     'projectId' => $projectId,
-                    'userId' => $userId
+                    'userId' => $userId,
+                    'deployType' => $deployType
                 )
             )
         );
         return !empty($res);
     }
     //写项目部署日志
-    function addDeployProjectLog($projectId,$userId, $oldRevision, $newRevision) {
+    function addDeployProjectLog($projectId, $userId, $oldRevision, $newRevision, $deployType) {
         return $this->insertKeyUp(
             'deploy_log_project',
             array(
@@ -63,6 +64,7 @@ class Deploy_model extends MY_Model{
                 'projectId' => $projectId,
                 'oldRevision' => $oldRevision,
                 'newRevision' => $newRevision,
+                'deployType' => $deployType,
                 'deployTime' => TIMESTAMP,
             )
         );
@@ -80,8 +82,8 @@ class Deploy_model extends MY_Model{
         );
     }
     // 获取某个项目的最新部署
-    function getLastDeploys($projectId, $limit=20){
-        $sql = 'SELECT l.*,u.username,p.cname as projectName FROM (SELECT * FROM deploy_log_project WHERE projectId=' . $projectId . ' ORDER BY deployTime DESC LIMIT ' . $limit . ') l INNER JOIN project p ON l.projectId=p.id INNER JOIN user u ON l.userId=u.id ORDER BY deployTime DESC';
+    function getLastDeploys($projectId, $deployType, $limit=20){
+        $sql = 'SELECT l.*,u.username,p.cname as projectName FROM (SELECT * FROM deploy_log_project WHERE projectId=' . $projectId . ' AND deployType='.$deployType.'  ORDER BY deployTime DESC LIMIT ' . $limit . ') l INNER JOIN project p ON l.projectId=p.id INNER JOIN user u ON l.userId=u.id ORDER BY deployTime DESC';
         $query = $this->db->query($sql);
         return $query->result_array();
     }

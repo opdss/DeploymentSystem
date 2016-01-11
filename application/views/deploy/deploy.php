@@ -4,7 +4,7 @@
 ?>
     <div class="centercontent tables">
         <?php
-            include(VIEWPATH.'deploy/'.$this->router->method.'.php');
+            include(VIEWPATH.'deploy/'.(isset($tplVars['template']) ? $tplVars['template'] : $this->router->method).'.php');
         ?>
     </div>
 <?php

@@ -169,9 +169,12 @@ class Project extends MY_Controller{
                     'beforeExec' => array(0),
                     'afterExec' => array(0),
                 ) as $key=>$val){
-            $data[$key] = $this->input->post($key);
+            $data[$key] = trim($this->input->post($key));
             if(strlen($data[$key]) == 0 && $val[0] == 1){
                 $this->error(lang($key).lang('field_empty'));
+            }
+            if($key == 'deployPath' || $key == 'prodPath'){
+                $data[$key] = rtrim($data[$key],DIRECTORY_SEPARATOR);
             }
         }
         return $data;

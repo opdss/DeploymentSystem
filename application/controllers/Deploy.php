@@ -9,6 +9,12 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Deploy extends MY_Controller{
 
+    const
+        PRE_DEPLOY_TYPE = 0,
+        PRO_DEPLOY_TYPE = 1,
+        PRE_DIR = 'pre_dir',    //预发布目录
+        PRO_DIR= 'pro_dir';     //生产目录
+
     function __construct(){
         parent::__construct();
         $this->load->model('deploy_model');
@@ -20,36 +26,87 @@ class Deploy extends MY_Controller{
         $projectInfo = self::_getProjectInfo($id,false);
         $deployPath = $projectInfo['deployPath'];
         $svnUrl = $projectInfo['svnUrl'];
-        if (!is_dir($deployPath)) {
-            // 创建发布目录
-            if (!@mkdir($deployPath, DIR_WRITE_MODE, True)) {
-                $this->error(str_replace('{$deployPath}',$deployPath,lang('deploy_mkdir_deploypath_error')));
+        $preInitDir = $deployPath.DIRECTORY_SEPARATOR.self::PRE_DIR;
+        $proInitDir = $deployPath.DIRECTORY_SEPARATOR.self::PRO_DIR;
+        if (!is_dir($preInitDir)) {
+            // 创建预发布目录
+            if (!@mkdir($preInitDir, DIR_WRITE_MODE, True)) {
+                $this->error(str_replace('{$deployPath}',$preInitDir,lang('deploy_mkdir_deploypath_error')));
             }
         }
-        if (!is_dir($deployPath . DIRECTORY_SEPARATOR . '.svn')) {
-            // 检出SVN代码到发布目录
-            $res = Shell::svnCheckOut($svnUrl,$deployPath);
+        if (!is_dir($proInitDir)) {
+            // 创建正式发布目录
+            if (!@mkdir($proInitDir, DIR_WRITE_MODE, True)) {
+                $this->error(str_replace('{$deployPath}',$proInitDir,lang('deploy_mkdir_deploypath_error')));
+            }
+        }
+
+        if (!is_dir($preInitDir . DIRECTORY_SEPARATOR . '.svn')) {
+            // 检出SVN代码到预发布目录
+            $res = Shell::svnCheckOut($svnUrl,$preInitDir);
+            if($res === false){
+                $this->error(str_replace('{$svnUrl}',$svnUrl,lang('deploy_svn_checkout_error')));
+            }
+        }
+        if (!is_dir($proInitDir . DIRECTORY_SEPARATOR . '.svn')) {
+            // 检出SVN代码到正式发布目录
+            $res = Shell::svnCheckOut($svnUrl,$proInitDir);
             if($res === false){
                 $this->error(str_replace('{$svnUrl}',$svnUrl,lang('deploy_svn_checkout_error')));
             }
         }
         $this->success(lang('deploy_init_success'));
     }
+    function preDiff($id=0){
+        $this->_diff($id,self::PRE_DEPLOY_TYPE);
+    }
+
+    function proDiff($id=0){
+        $this->_diff($id,self::PRO_DEPLOY_TYPE);
+    }
+
+    function preConfirm($id=0){
+        $this->_confirm($id,self::PRE_DEPLOY_TYPE);
+    }
+
+    function proConfirm($id=0){
+        $this->_confirm($id,self::PRO_DEPLOY_TYPE);
+    }
+
+    function preCommit($id=0){
+        $this->_commit($id,self::PRE_DEPLOY_TYPE);
+    }
+
+    function proCommit($id=0){
+        $this->_commit($id,self::PRO_DEPLOY_TYPE);
+    }
+
+    function preRollback($id=0){
+        $this->_rollBack($id,self::PRE_DEPLOY_TYPE);
+    }
+
+    function proRollback($id=0){
+        $this->_rollBack($id,self::PRO_DEPLOY_TYPE);
+    }
+
     //对项目进行diff
-    function diff($id=0){
+    private function _diff($id=0, $deployType){
         $projectInfo = self::_getProjectInfo($id);
         // 是否强制释放别人的锁
-        $this->_deployCheck($projectInfo,(bool)$this->input->get('clearlock'));
+        $this->_deployCheck($projectInfo,(bool)$this->input->get('clearlock'),$deployType);
 
-        $deployPath  = $projectInfo['deployPath'];
+        $deployPath  = $projectInfo['deployPath'] . DIRECTORY_SEPARATOR . ($deployType ? self::PRO_DIR : self::PRE_DIR);
 
-        // 判断预发布机和发布机的绑定信息
-        if(empty($projectInfo['bindHosts'])){
-            $this->error(lang('deploy_bind_host_no'));
+        //检查发布机器
+        if($deployType){
+            if(empty($projectInfo['bindHosts']['deployHosts'])) {
+                $this->error('没有绑定正式发布机器');
+            }
+        }else{
+            if(empty($projectInfo['bindHosts']['predeployHosts'])) {
+                $this->error('没有绑定预发布机器');
+            }
         }
-        $hasPredeploy = count($projectInfo['bindHosts']['predeployHosts']) > 0 ? true : false;
-        $hasDeploy    = count($projectInfo['bindHosts']['deployHosts']) > 0 ? true : false;
-
 
         $toRevision = ($_revision = trim($this->input->get('revision')))
             ? (is_numeric($_revision) ? intval($_revision) : $_revision)
@@ -61,7 +118,7 @@ class Deploy extends MY_Controller{
         }
 
         $prevRevision = $baseSvnInfo['revision'];
-        $this->setPreviousRevision($id, $prevRevision);
+        $this->setPreviousRevision($id, $prevRevision, $deployType);
 
         //获取部署机上最新版本的SVN信息
         $headSvnInfo = Shell::getSvnInfo($deployPath,$toRevision);
@@ -69,7 +126,7 @@ class Deploy extends MY_Controller{
             $this->error($headSvnInfo);
         }
         $toRevision = $headSvnInfo['revision'];
-        $this->setCurrentRevision($id, $toRevision);
+        $this->setCurrentRevision($id, $toRevision, $deployType);
         //获取diff结果
         $diffInfo = array();
         if ($baseSvnInfo['revision'] != $headSvnInfo['revision']) {
@@ -77,7 +134,7 @@ class Deploy extends MY_Controller{
         }
 
         // 获取部署流程锁
-        $res = $this->_getDeploytLock($id, $prevRevision, $toRevision);
+        $res = $this->_getDeploytLock($id, $prevRevision, $toRevision, $deployType);
         if(is_string($res)){
             $this->error($res);
         }
@@ -87,48 +144,75 @@ class Deploy extends MY_Controller{
         $tplVars['diffInfo'] = $diffInfo;
 
         $tplVars['projectInfo'] = $projectInfo;
-        $tplVars['hasPredeploy'] = $hasPredeploy;
-        $tplVars['hasDeploy'] = $hasDeploy;
+        $tplVars['deployType'] = $deployType;
+
+        $tplVars['template'] = 'diff';
+        $this->_G['tplVars'] = $tplVars;
+        $this->load->view('deploy/deploy',$this->_G);
+    }
+    //将代码发送到线测机或线上（生产）机前，进行要发送的主机列表确认
+    private function _confirm($id=0, $deployType) {
+        $projectInfo = self::_getProjectInfo($id);
+        $this->_deployCheck($projectInfo, true, $deployType);
+
+        // 判断发布机器的绑定信息
+        if(empty($projectInfo['bindHosts'])){
+            $this->error(lang('deploy_bind_host_no'));
+        }
+        //检查发布机器
+        $tplVars['deployHosts'] = $deployType ? $projectInfo['bindHosts']['deployHosts'] : $projectInfo['bindHosts']['predeployHosts'];
+        if(empty($tplVars['deployHosts'])){
+            $this->error(lang('deploy_bind_host_no'));
+        }
+
+        //将传来的参数原样传回去 赋值页面变量
+        ($referer = $this->input->get('referer')) or $referer = 'home';
+        ($delete = $this->input->get('delete')) or $delete = 'false';
+
+        $tplVars['projectId'] = $id;
+        $tplVars['referer'] = $referer;
+        $tplVars['delete'] = $delete;
+        $tplVars['deployType'] = $deployType;
+        $tplVars['template'] = 'confirm';
         $this->_G['tplVars'] = $tplVars;
         $this->load->view('deploy/deploy',$this->_G);
     }
 
-    function commit($id=0){
+    private function _commit($id=0, $deployType){
         $projectInfo = self::_getProjectInfo($id);
-        $this->_deployCheck($projectInfo);
+        $this->_deployCheck($projectInfo, true, $deployType);
 
-        //$predeployHosts = $projectInfo['bindHosts']['predeployHosts'];
-        //$deployHosts = $projectInfo['bindHosts']['deployHosts'];
+        $deployPath  = $projectInfo['deployPath'] . DIRECTORY_SEPARATOR . ($deployType ? self::PRO_DIR : self::PRE_DIR);
 
         ($referer = $this->input->get('referer')) or $referer = 'home';
-        ($currentStep = $this->input->get('step')) or $currentStep = 'predeploy';
         ($delete = $this->input->get('delete')) or $delete = 'false';
-        $deployHosts = $currentStep == 'deploy' ? $projectInfo['bindHosts']['deployHosts'] : $projectInfo['bindHosts']['predeployHosts'];
 
-        $prevRevision = $this->getPreviousRevision($id);
-        $toRevision = $this->getCurrentRevision($id);
-
-        // 判断预发布机和发布机的绑定信息
-        //$hasPredeploy = count($predeployHosts) > 0 ? True : False;
-        //$hasDeploy    = count($deployHosts) > 0 ? True : false;
-
-        if ($deployHosts == false) {
+        //检查发布机器
+        $deployHosts = $deployType ? $projectInfo['bindHosts']['deployHosts'] : $projectInfo['bindHosts']['predeployHosts'];
+        if(empty($deployHosts)){
             $this->error(lang('deploy_bind_host_no'));
         }
+
+        $prevRevision = $this->getPreviousRevision($id, $deployType);
+        $toRevision = $this->getCurrentRevision($id, $deployType);
+
         if ($toRevision === false || $prevRevision === false) {
             $this->error(lang('deploy_unlawful'));
         }
         // 获取部署锁,防止冲突
-        if (!$this->deploy_model->checkDeployLock($id,$this->_G['userInfo']['id'])) {
+        if (!$this->deploy_model->checkDeployLock($id, $this->_G['userInfo']['id'], $deployType)) {
             $this->error(lang('deploy_lock_error'));
         }
 
-        $updateInfo = Shell::svnUpdate($projectInfo['deployPath'], $toRevision);
+        $updateInfo = Shell::svnUpdate($deployPath, $toRevision);
         $tplVars['doUpdate'] = true;
         $tplVars['updateInfo'] = $updateInfo;
         // Rsync同步到生产机
         $failNum = 0;
         $successNum = 0;
+
+        //更新对应的部署代码路径
+        $projectInfo['deployPath'] =  $deployPath;
         $pushInfo = Shell::pushCodeToHosts($projectInfo, $deployHosts, $delete);
 
         $tplVars['pushInfo'] = $pushInfo;
@@ -137,7 +221,7 @@ class Deploy extends MY_Controller{
         }
 
         // 写入部署日志,方便日后回滚
-        $logId = $this->deploy_model->addDeployProjectLog($id,$this->_G['userInfo']['id'], $prevRevision, $toRevision);
+        $logId = $this->deploy_model->addDeployProjectLog($id,$this->_G['userInfo']['id'], $prevRevision, $toRevision, $deployType);
         if ($logId > 0){
             foreach ($pushInfo['rsync'] as $k => $rsyncLog) {
                 $hostIp = $deployHosts[$k]['ip'];
@@ -154,256 +238,73 @@ class Deploy extends MY_Controller{
         $tplVars['failNum'] = $failNum;
         $tplVars['successNum'] = $successNum;
         // 释放锁
-        $this->deploy_model->releaseDeployLock($id,$this->_G['userInfo']['id'],true);
+        $this->deploy_model->releaseDeployLock($id, $this->_G['userInfo']['id'], true, $deployType);
 
 
         $tplVars['projectInfo'] = $projectInfo;
-        $tplVars['predeployHosts'] = $deployHosts;
         $tplVars['deployHosts'] = $deployHosts;
-        $tplVars['hasPredeploy'] = $currentStep == 'predeploy';
-        $tplVars['hasDeploy'] = $currentStep == 'predeploy';
+
         $tplVars['prevRevision'] = $prevRevision;
         $tplVars['toRevision'] = $toRevision;
         $tplVars['projectId'] = $id;
-        $this->_G['tplVars'] = $tplVars;
-        $this->load->view('deploy/deploy',$this->_G);
-    }
-    /*
-    // 进入代码发布流程
-    function index($id=0){
-        ($id = intval($id)) or $this->error(lang('project_id_error'));
-        $projectInfo = $this->deploy_model->getOne('project',array('where'=>array('id'=>$id)));
-        if(empty($projectInfo)){
-            $this->error('没有该项目相关信息');
-        }
-        if (!$this->deploy_model->checkProjectUserBind($id,$this->_G['userInfo']['id'])) {
-            $this->error('你没有该项目的部署权限');
-        }
-        ($referer = $this->input->get('referer')) or $referer = 'home';
-        ($currentStep = $this->input->get('step')) or $currentStep = 'diff';
-        ($delete = $this->input->get('delete')) or $delete = 'false';
 
-        $deployPath  = $projectInfo['deployPath'];
-        $svnUrl = $projectInfo['svnUrl'];
-        if (!is_dir($deployPath)) {
-            $this->error('项目尚未初始化,发布目录"' . $deployPath . '"不存在');
-        }
-        if (!is_dir($deployPath . DIRECTORY_SEPARATOR . '.svn')) {
-            renderError('项目尚未初始化,代码仓库"' . $svnUrl . '"未检出到发布目录');
-        }
-
-        $predeployHosts = $this->deploy_model->getPredeployHosts($id);
-        $deployHosts = $this->deploy_model->getDeployHosts($id);
-        $prevRevision = $this->getPreviousRevision($id);
-        $toRevision = $this->getCurrentRevision($id);
-
-        // 判断预发布机和发布机的绑定信息
-        $hasPredeploy = count($predeployHosts) > 0 ? True : False;
-        $hasDeploy    = count($deployHosts) > 0 ? True : false;
-
-        if($currentStep == 'diff'){
-            $tplVars['template'] = 'diff';
-            // 强制清理其他部署会话       // 强制释放本人持有的锁或别人的锁
-            $this->input->get('clearlock') and $this->deploy_model->releaseDeployLock($id,$this->_G['userInfo']['id'],false);
-
-            $toRevision = ($_revision = trim($this->input->get('revision')))
-                    ? (is_numeric($_revision) ? intval($_revision) : $_revision)
-                    : 'HEAD';
-
-            // 获取部署机上工作版本SVN的信息
-            $baseSvnInfo = Shell::getSvnInfo($deployPath,'BASE');
-            if (!is_array($baseSvnInfo) || !isset($baseSvnInfo['revision'])) {
-                $this->error($baseSvnInfo);
-            }
-
-            $prevRevision = $baseSvnInfo['revision'];
-            $this->setPreviousRevision($id, $prevRevision);
-
-            //获取部署机上最新版本的SVN信息
-            $headSvnInfo = Shell::getSvnInfo($deployPath,$toRevision);
-            if (!is_array($headSvnInfo) || !isset($headSvnInfo['revision'])) {
-                $this->error($headSvnInfo);
-            }
-            $toRevision = $headSvnInfo['revision'];
-            $this->setCurrentRevision($id, $toRevision);
-
-            $diffInfo = array();
-            if ($baseSvnInfo['revision'] != $headSvnInfo['revision']) {
-                $diffInfo = Shell::getSvnDiffInfo($deployPath, $prevRevision, $toRevision);
-            }
-
-            // 获取部署流程锁
-            $res = $this->_getDeploytLock($id, $prevRevision, $toRevision);
-            if(is_string($res)){
-                $this->error($res);
-            }
-
-            $tplVars['baseSvnInfo'] = $baseSvnInfo;
-            $tplVars['headSvnInfo'] = $headSvnInfo;
-            $tplVars['diffInfo'] = $diffInfo;
-        }
-        elseif($currentStep == 'predeploy'){
-            if ($hasPredeploy == false) {
-                $this->error('该项目尚未绑定任何预发布机');
-            }
-            if ($toRevision === false || $prevRevision === false) {
-                $this->error('非法的上下文环境,版本号信息缺失');
-            }
-            // 获取部署锁,防止冲突
-            if (!$this->deploy_model->checkDeployLock($id,$this->_G['userInfo']['id'])) {
-                $this->error('您尚未持有部署锁或者已经失效');
-            }
-            // 更新工作拷贝到Diff的版本
-            $updateInfo = Shell::svnUpdate($deployPath, $toRevision);
-
-            // Rsync同步到预发布机
-            $pushInfo = Shell::pushCodeToHosts($projectInfo, $predeployHosts, $delete);
-            $tplVars['doUpdate'] = True;
-            $tplVars['updateInfo'] = $updateInfo;
-            $tplVars['pushInfo'] = $pushInfo;
-
-            // 释放锁
-            if ($hasDeploy == false) {
-                $this->deploy_model->releaseDeployLock($id,$this->_G['userInfo']['id'],true);
-            }
-        }
-        elseif($currentStep == 'deploy'){
-            if ($hasDeploy == false) {
-                $this->error('该项目尚未绑定任何生产机');
-            }
-            if ($toRevision === false || $prevRevision === false) {
-                $this->error('非法的上下文环境,版本号信息缺失');
-            }
-            // 获取部署锁,防止冲突
-            if (!$this->deploy_model->checkDeployLock($id,$this->_G['userInfo']['id'])) {
-                $this->error('您尚未持有部署锁或者已经失效');
-            }
-            // 判定是否已经更新过目标版本
-            if ($referer == 'diff') {
-                $updateInfo = Shell::svnUpdate($deployPath, $toRevision);
-                $tplVars['doUpdate'] = true;
-                $tplVars['updateInfo'] = $updateInfo;
-            } else {
-                $tplVars['doUpdate'] = false;
-            }
-            // Rsync同步到生产机
-            $failNum = 0;
-            $successNum = 0;
-            $pushInfo = Shell::pushCodeToHosts($projectInfo, $deployHosts, $delete);
-            $tplVars['pushInfo'] = $pushInfo;
-            if (isset($pushInfo['rsync']) && sizeof($pushInfo['rsync'])>0) {
-                $successNum = sizeof($pushInfo['rsync']);
-            }
-            // 写入部署日志,方便日后回滚
-            $logId = $this->deploy_model->addDeployProjectLog($id,$this->_G['userInfo']['id'], $prevRevision, $toRevision);
-            if ($logId > 0){
-                foreach ($pushInfo['rsync'] as $k => $rsyncLog) {
-                    $hostIp = $deployHosts[$k]['ip'];
-                    $status = 0;
-                    if (strpos($rsyncLog,'building file list ... done') !== false && strpos($rsyncLog, 'total size is') !== false) {
-                        $status = 1;
-                    } else {
-                        $failNum++;
-                        $successNum--;
-                    }
-                    $this->deploy_model->addDeployHostLog($logId, $hostIp, $rsyncLog, $status);
-                }
-            }
-            $tplVars['failNum'] = $failNum;
-            $tplVars['successNum'] = $successNum;
-            // 释放锁
-            if ($hasDeploy == True) {
-                $this->deploy_model->releaseDeployLock($id,$this->_G['userInfo']['id'],true);
-            }
-        }
-        $_REQUEST['step'] = $currentStep;
-        $tplVars['projectInfo'] = $projectInfo;
-        $tplVars['predeployHosts'] = $predeployHosts;
-        $tplVars['deployHosts'] = $deployHosts;
-        $tplVars['hasPredeploy'] = $hasPredeploy;
-        $tplVars['hasDeploy'] = $hasDeploy;
-        $tplVars['prevRevision'] = $prevRevision;
-        $tplVars['toRevision'] = $toRevision;
-        $tplVars['projectId'] = $id;
-        $this->_G['tplVars'] = $tplVars;
-        $this->load->view('deploy/deploy',$this->_G);
-    }
-    */
-    //将代码发送到线测机或线上（生产）机前，进行要发送的主机列表确认
-    function confirm($id=0) {
-        $projectInfo = self::_getProjectInfo($id);
-        $this->_deployCheck($projectInfo);
-
-        $predeployHosts = $projectInfo['bindHosts']['predeployHosts'];
-        $deployHosts = $projectInfo['bindHosts']['deployHosts'];
-        //获取当前step,默认为predeploy
-        (($currentStep = $this->input->get('step')) and in_array($currentStep,array('predeploy','deploy'))) or $currentStep='predeploy';
-
-        //根据当前是预部署还是正式部署，获取要部署的host列表，并将要部署的主机列表 赋页面变量
-        $tplVars['deployHosts'] = $currentStep == 'predeploy' ? $predeployHosts : $deployHosts;
-
-        //将传来的参数原样传回去 赋值页面变量
-        ($referer = $this->input->get('referer')) or $referer = 'home';
-        ($delete = $this->input->get('delete')) or $delete = 'false';
-
-        $tplVars['projectId'] = $id;
-        $tplVars['step'] = $currentStep;
-        $tplVars['referer'] = $referer;
-        $tplVars['delete'] = $delete;
+        $tplVars['template'] = 'commit';
         $this->_G['tplVars'] = $tplVars;
         $this->load->view('deploy/deploy',$this->_G);
     }
     // 进入代码回滚流程
-    function rollBack($id=0){
+    private function _rollBack($id=0, $deployType){
         // 获取项目信息和绑定的主机信息
         $projectInfo = self::_getProjectInfo($id);
         //该项目的部署权限
-        $this->_deployCheck($projectInfo);
+        $this->_deployCheck($projectInfo, True, $deployType);
 
-        $lastDeploys = $this->deploy_model->getLastDeploys($id);
+        $lastDeploys = $this->deploy_model->getLastDeploys($id, $deployType, 20);
 
         // $toRevision = isset($_REQUEST['revision']) ? intval($_REQUEST['revision']) : 'PREV';
 
         $tplVars['projectInfo'] = $projectInfo;
         $tplVars['lastDeploys']= $lastDeploys;
+        $tplVars['deployType'] = $deployType;
+        $tplVars['template'] = 'rollback';
         $this->_G['tplVars'] = $tplVars;
         $this->load->view('deploy/deploy',$this->_G);
     }
 
     // 获取当前用户正在部署的版本
-    function getPreviousRevision($projectId){
-        $cookieName = 'previous:'.$projectId;
+    private function getPreviousRevision($projectId, $deployType){
+        $cookieName = 'previous_'.$deployType.':'.$projectId;
         if (isset($_COOKIE[$cookieName]) && is_numeric($_COOKIE[$cookieName])) {
             return $_COOKIE[$cookieName];
         }
         return false;
     }
     // 获取当前用户正在部署的版本
-    function getCurrentRevision($projectId){
-        $cookieName = 'revision:'.$projectId;
+    private function getCurrentRevision($projectId, $deployType){
+        $cookieName = 'revision_'.$deployType.':'.$projectId;
         if (isset($_COOKIE[$cookieName]) && is_numeric($_COOKIE[$cookieName])) {
             return $_COOKIE[$cookieName];
         }
         return false;
     }
     // 设置部署前的版本
-    function setPreviousRevision($projectId, $revision){
-        $cookieName = 'previous:'.$projectId;
+    private function setPreviousRevision($projectId, $revision, $deployType){
+        $cookieName = 'previous_'.$deployType.':'.$projectId;
         if (is_numeric($projectId) && is_numeric($revision)) {
             setcookie($cookieName, $revision, time()+3600*24*365,'/deploy/');
         }
     }// 设置当前用户正在部署的版本
-    function setCurrentRevision($projectId, $revision){
-        $cookieName = 'revision:'.$projectId;
+    private function setCurrentRevision($projectId, $revision, $deployType){
+        $cookieName = 'revision_'.$deployType.':'.$projectId;
         if (is_numeric($projectId) && is_numeric($revision)) {
             setcookie($cookieName, $revision, time()+3600*24*365,'/deploy/');
         }
     }
 
     // 对某个部署项目进行加锁,防止多人部署
-    private function _getDeploytLock($projectId, $oldRevision, $newRevision){
+    private function _getDeploytLock($projectId, $oldRevision, $newRevision, $deployType){
         $userInfo = $this->_G['userInfo'];
-        $sessions = $this->deploy_model->getList('deploy_session',array('where'=>'projectId=' . $projectId . ' AND userId !=' . $userInfo['id']));
+        $sessions = $this->deploy_model->getList('deploy_session',array('where'=>'projectId=' . $projectId . ' AND userId !=' . $userInfo['id'] .' AND deployType='.$deployType));
         if (sizeof($sessions)>0) {
             $this->error(
                 lang('deploy_project_user_already_exists'),
@@ -420,6 +321,7 @@ class Deploy extends MY_Controller{
                     'username' => $userInfo['username'],
                     'oldRevision' => $oldRevision,
                     'newRevision' => $newRevision,
+                    'deployType' => $deployType,
                     'createTime' => TIMESTAMP,
                 ),
                 array(
@@ -428,6 +330,7 @@ class Deploy extends MY_Controller{
                     'username',
                     'oldRevision',
                     'newRevision',
+                    'deployType',
                     'createTime',
                 )
             );
@@ -435,16 +338,17 @@ class Deploy extends MY_Controller{
     }
 
     //部署前检查
-    private function _deployCheck($projectInfo,$clearlock=true){
-        if (!is_dir($projectInfo['deployPath'])) {
-            $this->error(str_replace('{$deployPath}',$projectInfo['deployPath'],lang('deploy_init_no')));
+    private function _deployCheck($projectInfo, $clearlock=true, $deployType=self::PRE_DEPLOY_TYPE){
+        $deployPath = $projectInfo['deployPath'].DIRECTORY_SEPARATOR.($deployType ? self::PRO_DIR : self::PRE_DIR);
+        if (!is_dir($deployPath)) {
+            $this->error(str_replace('{$deployPath}',$deployPath,lang('deploy_init_no')));
         }
-        if (!is_dir($projectInfo['deployPath'] . DIRECTORY_SEPARATOR . '.svn')) {
+        if (!is_dir($deployPath . DIRECTORY_SEPARATOR . '.svn')) {
             $this->error(str_replace('{$svnUrl}',$projectInfo['svnUrl'],lang('deploy_svn_init_no')));
         }
         // 强制清理其他部署会话
         // 强制释放本人持有的锁或别人的锁
-        $clearlock and $this->deploy_model->releaseDeployLock($projectInfo['id'],$this->_G['userInfo']['id'],false);
+        $clearlock and $this->deploy_model->releaseDeployLock($projectInfo['id'], $this->_G['userInfo']['id'], false, $deployType);
 
     }
 

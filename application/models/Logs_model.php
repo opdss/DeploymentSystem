@@ -13,7 +13,7 @@ class Logs_model extends MY_Model{
                 l.*,u.username,p.name AS projectEname,p.cname AS projectCname
             FROM
                 (SELECT
-                    id, userId, projectId, oldRevision, newRevision, deployTime
+                    id, userId, projectId, oldRevision, newRevision, deployTime, deployType
                 FROM
                     deploy_log_project
                 WHERE
@@ -39,7 +39,7 @@ EOF;
     function getLogInfo($logId){
         //获取日志详情
         $sql = 'SELECT l.*,u.username,p.name AS projectEname,p.cname AS projectCname '
-            .'FROM (SELECT id, userId, projectId, oldRevision , newRevision, deployTime FROM deploy_log_project '
+            .'FROM (SELECT id, userId, projectId, oldRevision , newRevision, deployType, deployTime FROM deploy_log_project '
             .'WHERE id = '.$logId.' ) l '
             .'INNER JOIN user u ON l.userId=u.id INNER JOIN project p ON l.projectId=p.id';
         $query = $this->db->query($sql);

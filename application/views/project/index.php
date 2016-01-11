@@ -31,8 +31,18 @@
                     <a onclick="javascript:return delConfirm()" href="<?php echo site_url('project/del/'.$value['id']);?>" id="delete_href">删除</a>&nbsp;
                 </td>
                 <td class="center">
-                    <a href="<?php echo site_url('deploy/diff/'.$value['id']);?>" class="btn btn2 btn_archive"><span>部署</span></a>&nbsp;
-                    <a href="<?php echo site_url('deploy/rollBack/'.$value['id']);?>" class="btn btn2 btn_cloud"><span>回滚</span></a>
+                    <?php if(in_array('deploy.preDiff',$userInfo['privilege'])){ ?>
+                    <a href="<?php echo site_url('deploy/preDiff/'.$value['id']);?>" class="btn btn2 btn_archive"><span>预部署</span></a>&nbsp;
+                    <?php }?>
+                    <?php if(in_array('deploy.proDiff',$userInfo['privilege'])){ ?>
+                    <a href="<?php echo site_url('deploy/proDiff/'.$value['id']);?>" class="btn btn2 btn_archive"><span>生产部署</span></a>&nbsp;
+                    <?php }?>
+                    <?php if(in_array('deploy.preRollBack',$userInfo['privilege'])){ ?>
+                    <a href="<?php echo site_url('deploy/preRollBack/'.$value['id']);?>" class="btn btn2 btn_cloud"><span>预回滚</span></a>&nbsp;
+                    <?php }?>
+                    <?php if(in_array('deploy.proRollBack',$userInfo['privilege'])){ ?>
+                    <a href="<?php echo site_url('deploy/proRollBack/'.$value['id']);?>" class="btn btn2 btn_cloud"><span>生产回滚</span></a>&nbsp;
+                    <?php }?>
                 </td>
             </tr>
         <?php } ?>

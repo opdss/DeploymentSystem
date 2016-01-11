@@ -39,6 +39,7 @@
                 <th class="head0">项目中文名</th>
                 <th class="head1">旧版本号</th>
                 <th class="head0">新版本号</th>
+                <th class="head0">部署类型</th>
                 <th class="head1">部署时间</th>
                 <th class="head0">&nbsp;</th>
             </tr>
@@ -52,6 +53,7 @@
                     <td><?php echo htmlspecialchars($value['projectCname']); ?></td>
                     <td><?php echo htmlspecialchars($value['oldRevision']); ?></td>
                     <td><?php echo htmlspecialchars($value['newRevision']); ?></td>
+                    <td><?php echo ($value['deployType'] ? '正式部署' : '预部署'); ?></td>
                     <td class="center"><?php echo date('Y-m-d H:i:s',$value['deployTime'])?></td>
                     <td class="center">
                         <a href="<?php echo site_url('logs/show/'.$value['id'])?>">查看详情</a> &nbsp;
