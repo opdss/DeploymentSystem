@@ -33,7 +33,8 @@
 <div class="bodywrapper">
     <div class="topheader">
         <div class="left">
-            <h1 class="logo"><a href="/">7659<span>Deploy</span>(测试环境)</a></h1>
+            <!--<h1 class="logo"><a href="/">7659<span>Deploy</span>(测试环境)</a></h1>-->
+            <h1 class="logo"><a href="<?php echo site_url();?>"><?php echo $this->_G['site_conf']['sitename'];?></a></h1>
             <br clear="all" />
         </div>
         <div class="right">

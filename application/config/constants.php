@@ -86,5 +86,5 @@ define('EXIT__AUTO_MIN', 9); // lowest automatically-assigned error code
 define('EXIT__AUTO_MAX', 125); // highest automatically-assigned error code
 
 define('DEFAULT_RSYNC_USER','wuxin');
-define('SVN_USERNAME','wuxin');
-define('SVN_PASSWORD','12345678');
+define('SVN_USERNAME','wux');
+define('SVN_PASSWORD','123456');

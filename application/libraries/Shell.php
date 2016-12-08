@@ -7,7 +7,7 @@
  */
 class Shell{
 
-    static private $userAuth = ' --username=wuxin --password=12345678' ;
+    static private $userAuth = ' --username='.SVN_USERNAME.' --password='.SVN_PASSWORD ;
 
     //检查一个主机是否跟部署机联通
     static function checkPing($ip){

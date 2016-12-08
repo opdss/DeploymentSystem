@@ -16,6 +16,7 @@ class MY_Controller extends CI_Controller {
 	public function __construct() {
 		parent::__construct();
         $this->load->language('deploy');
+        $this->_G['site_conf'] = $this->config->item('site_conf');
 	}
 
 	static public function jsonMsg($code, $data_msg = '', $type = false) {
@@ -50,6 +51,7 @@ class MY_Controller extends CI_Controller {
 
     protected function _checkLogin(){
         if(empty($this->_G['userInfo'])){
+            var_export(222);exit;
             self::$isAjax ? self::jsonMsg(-1) : redirect('login/index');
         }
     }
