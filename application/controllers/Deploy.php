@@ -126,6 +126,7 @@ class Deploy extends MY_Controller{
         $updateInfo = Shell::svnUpdate($projectInfo['deployPath'], $toRevision);
         $tplVars['doUpdate'] = true;
         $tplVars['updateInfo'] = $updateInfo;
+        log_message('debug', __METHOD__.'.$tplVars ==> '.var_export($tplVars, true));
         // Rsync同步到生产机
         $failNum = 0;
         $successNum = 0;

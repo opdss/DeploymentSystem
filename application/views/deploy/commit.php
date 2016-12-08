@@ -19,23 +19,22 @@ $updateStatus = array('A' => '新增', 'D' => '删除', 'U' => '更新', 'C' => 
             </thead>
             <tbody>
             <?php
-            foreach ($tplVars['updateInfo'] as $revision => $modifyFiles)
-            {
-                foreach ($modifyFiles as $type => $files)
-                {
-                    ?>
-                    <tr>
-                        <td><?php echo $updateStatus[$type] ?></td>
-                        <td>
-                            <?php
-                            foreach ($files as $file)
-                            {
-                                echo $file . '<br />';
-                            }
-                            ?>
-                        </td>
-                    </tr>
-                    <?php
+            if (!empty($tplVars['updateInfo'])) {
+                foreach ($tplVars['updateInfo'] as $revision => $modifyFiles) {
+                    foreach ($modifyFiles as $type => $files) {
+                        ?>
+                        <tr>
+                            <td><?php echo $updateStatus[$type] ?></td>
+                            <td>
+                                <?php
+                                foreach ($files as $file) {
+                                    echo $file . '<br />';
+                                }
+                                ?>
+                            </td>
+                        </tr>
+                        <?php
+                    }
                 }
             }
             ?>

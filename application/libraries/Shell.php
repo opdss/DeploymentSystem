@@ -7,7 +7,7 @@
  */
 class Shell{
 
-    static private $userAuth = ' --username='.SVN_USERNAME.' --password='.SVN_PASSWORD ;
+    static $lang_cmd = ' export LC_CTYPE="zh_CN.UTF-8"; ';//export LANG="zh_CN.UTF-8"
 
     //检查一个主机是否跟部署机联通
     static function checkPing($ip){
@@ -19,23 +19,22 @@ class Shell{
     }
 
     static function svnCheckOut($svnUrl,$checkPath){
-        $cmd = 'svn checkout ' .$svnUrl . ' ' . escapeshellarg($checkPath) . static::$userAuth . ' 2>&1';
+        $cmd = self::$lang_cmd.' svn checkout ' .$svnUrl . ' ' . escapeshellarg($checkPath) . static::get_auth() . ' 2>&1';
         $cmdOutput = array();
         $cmdReturn = 0;
         exec($cmd, $cmdOutput, $cmdReturn);
-        log_message('error',$cmd);
+        log_message('error',__METHOD__.' ==> '.$cmd);
         return $cmdReturn != 0 ? false : $cmdOutput;
 
     }
     // 获取某个工作拷贝的某个版本的SVN信息
     static function getSvnInfo($deployPath, $revision = 'HEAD'){
-        $infoCmd = 'svn info -r ' . $revision . ' ' . escapeshellarg($deployPath) . static::$userAuth . ' 2>&1';
+        $infoCmd = self::$lang_cmd.' svn info -r ' . $revision . ' ' . escapeshellarg($deployPath) . static::get_auth() . ' 2>&1';
         $info = array();
         $return = 0;
         exec($infoCmd, $info, $return);
-        log_message('error',$infoCmd);
+        log_message('error',__METHOD__.' ==> '.$infoCmd);
         if ($return != 0 || sizeof($info) != 10) {
-            log_message('error',$infoCmd);
             return '获取发布目录当前'.$revision.'SVN信息失败:'. implode("<br />", $info);
         }
         $svnInfo = array();
@@ -49,11 +48,11 @@ class Shell{
     // 获取工作拷贝的两个版本的DIFF信息
     static function getSvnDiffInfo($deployPath, $revision1 = 'BASE', $revison2 = 'HEAD'){
         // 已经检出过,diff 当前版本与上一个版本
-        $diffCmd = 'svn diff -r ' . $revision1 . ':' . $revison2 . ' ' . escapeshellarg($deployPath) . static::$userAuth . ' 2>&1';
+        $diffCmd = self::$lang_cmd.' svn diff -r ' . $revision1 . ':' . $revison2 . ' ' . escapeshellarg($deployPath) . static::get_auth() . ' 2>&1';
         $diffOutput = array();
         $diffReturn = 0;
         exec($diffCmd, $diffOutput, $diffReturn);
-        log_message('error',$diffCmd);
+        log_message('error',__METHOD__.' ==> '.$diffCmd);
         if ($diffReturn != 0) {
             return 'Diff当前版本与上一版本失败:'. implode("<br />", $diffOutput);
         }
@@ -88,12 +87,12 @@ class Shell{
             'R' => 'Replaced',
             'I' => 'Ignored'
         );
-        $updateCmd = 'svn update -r ' . $revision . ' ' . escapeshellarg($deployPath) . static::$userAuth . ' 2>&1';
+        $updateCmd = self::$lang_cmd.' svn update -r ' . $revision . ' ' . escapeshellarg($deployPath) . static::get_auth() . ' 2>&1';
 
         $updateOutput = array();
         $updateReturn = 0;
         exec($updateCmd, $updateOutput, $updateReturn);
-        log_message('error',$updateCmd);
+        log_message('error',__METHOD__.' ==> '.$updateCmd);
 
         if ($updateReturn != 0) {
             //renderError2('Diff当前版本与上一版本失败', implode("<br />", $updateOutput));
@@ -273,5 +272,10 @@ class Shell{
             proc_close($process['handle']);
         }
         return $result;
+    }
+
+    protected static function get_auth()
+    {
+        return ' --username='.SVN_USERNAME.' --password='.SVN_PASSWORD.' ';
     }
 }
