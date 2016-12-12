@@ -166,6 +166,7 @@ class Project extends MY_Controller{
                     'prodPath' => array(1),
                     'svnUrl' => array(1),
                     'rsyncUser' => array(1),
+                    'localExec' => array(0),
                     'beforeExec' => array(0),
                     'afterExec' => array(0),
                 ) as $key=>$val){

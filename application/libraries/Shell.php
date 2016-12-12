@@ -117,11 +117,29 @@ class Shell{
         $productionPath = $projectInfo['prodPath'];
         $beforeExec = trim($projectInfo['beforeExec']);
         $afterExec = trim($projectInfo['afterExec']);
+        $localExec = trim($projectInfo['localExec']);
         $rsyncUser = trim($projectInfo['rsyncUser']) == '' ? DEFAULT_RSYNC_USER : trim($projectInfo['rsyncUser']);
         $rsyncList = array();
         $beforeList = array();
         $afterList = array();
         $result = array();
+
+        if (strlen($localExec)>0) {
+            $execArray = explode("\n", $localExec);
+            $cmdArray  = array();
+            foreach ($execArray as $cmd) {
+                $cmd = trim($cmd," ;");
+                if (strlen($cmd)>0) {
+                    $cmdArray[] = $cmd;
+                }
+            }
+            if (sizeof($cmdArray) > 0) {
+                $localExec = trim(implode(";", $cmdArray)," ;");
+                //执行部署前的本地命令
+                exec($localExec, $updateOutput, $updateReturn);
+                log_message('error',__METHOD__.' ==> '.$localExec);
+            }
+        }
 
         // tidy命令
         if (strlen($beforeExec)>0) {
@@ -170,7 +188,7 @@ class Shell{
         //    {
         //        $prefixCmd = 'sudo -s;su ' . $rsyncUser . ';cd ~;';
         //    }
-
+        $delete = false;
         $deleteopt = '';
         if (!$delete) {
             $deleteopt = '';

@@ -31,11 +31,15 @@
                 <span class="field"><input type="text" name="rsyncUser" class="mediuminput" value="<?php echo $tplVars['projectInfo']['rsyncUser']?>" /></span>
             </p>
             <p>
-                <label>发布前执行命令</label>
+                <label>发布前本地仓库执行命令(宿主机)</label>
+                <span class="field"><input type="text" name="localExec" class="longinput" value="<?php echo $tplVars['projectInfo']['localExec']?>" /></span>
+            </p>
+            <p>
+                <label>发布前执行命令(目标机)</label>
                 <span class="field"><input type="text" name="beforeExec" class="longinput" value="<?php echo $tplVars['projectInfo']['beforeExec']?>" /></span>
             </p>
             <p>
-                <label>发布后执行命令</label>
+                <label>发布后执行命令(目标机)</label>
                 <span class="field"><input type="text" name="afterExec" class="longinput" value="<?php echo $tplVars['projectInfo']['afterExec']?>" /></span>
             </p>
             <!--

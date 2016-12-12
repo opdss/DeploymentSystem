@@ -38,11 +38,15 @@
                 <span class="field"><input id="rsync_user" type="text" name="rsyncUser" class="mediuminput" value="<?php echo DEFAULT_RSYNC_USER?>" /></span>
             </p>
             <p>
-                <label>发布前执行命令</label>
+                <label>发布前本地仓库执行命令(宿主机)</label>
+                <span class="field"><input type="text" name="localExec" class="longinput" value="" /></span>
+            </p>
+            <p>
+                <label>发布前执行命令(目标机)</label>
                 <span class="field"><input type="text" name="beforeExec" class="longinput" value="" /></span>
             </p>
             <p>
-                <label>发布后执行命令</label>
+                <label>发布后执行命令(目标机)</label>
                 <span class="field"><input type="text" name="afterExec" class="longinput" value="" /></span>
             </p>
             <p class="stdformbutton">
