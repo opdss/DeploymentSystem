@@ -75,9 +75,9 @@ class Project extends MY_Controller{
     //删除项目记录,并 删除与主机的绑定关系，并删除与用户的绑定关系
     function del($id=0){
         ($id = intval($id)) or $this->error(lang('project_id_error'));
-        $del1 = $this->host_model->delete('project',array('id'=>$id));
-        $del2 = $this->host_model->delete('project_host',array('projectId'=>$id));
-        $del3 = $this->host_model->delete('user_project',array('projectId'=>$id));
+        $del1 = $this->project_model->delete('project',array('id'=>$id));
+        $del2 = $this->project_model->delete('project_host',array('projectId'=>$id));
+        $del3 = $this->project_model->delete('user_project',array('projectId'=>$id));
         if($del1 && $del2 && $del3){
             $this->success(lang('project_del_success'));
         }else{
