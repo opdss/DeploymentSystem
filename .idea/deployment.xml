@@ -12,7 +12,8 @@
       <paths name="192.168.1.187">
         <serverdata>
           <mappings>
-            <mapping deploy="/" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/DeploymentSystem/" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/deploy/" local="$PROJECT_DIR$/../deploy" />
           </mappings>
         </serverdata>
       </paths>
