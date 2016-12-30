@@ -48,16 +48,16 @@ class Project extends MY_Controller{
             $data = $this->_verifyInputProjectInfo();
             $res1 = $this->project_model->getTotal('project',array('name'=>$data['name']));
             $res2 = $this->project_model->getTotal('project',array('deployPath'=>$data['deployPath']));
-            $res3 = $this->project_model->getTotal('project',array('prodPath'=>$data['prodPath']));
+            //$res3 = $this->project_model->getTotal('project',array('prodPath'=>$data['prodPath']));
             if ($res1 > 0) {
                 $this->error(lang('project_name_already_exists'));
             }
             if ($res2 > 0) {
                 $this->error(lang('project_deploy_path_already_exists'));
             }
-            if ($res3 > 0) {
+            /*if ($res3 > 0) {
                 $this->error(lang('project_line_path_already_exists'));
-            }
+            }*/
             if (is_dir($data['deployPath'])) {
                 $this->error(lang('project_deploy_dir_already_exists'));
             }
@@ -90,16 +90,16 @@ class Project extends MY_Controller{
             $data = $this->_verifyInputProjectInfo($id);
             $res1 = $this->project_model->getOne('project',array('where'=>array('name'=>$data['name']),'select'=>'id'));
             $res2 = $this->project_model->getOne('project',array('where'=>array('deployPath'=>$data['deployPath']),'select'=>'id'));
-            $res3 = $this->project_model->getOne('project',array('where'=>array('prodPath'=>$data['prodPath']),'select'=>'id'));
+            //$res3 = $this->project_model->getOne('project',array('where'=>array('prodPath'=>$data['prodPath']),'select'=>'id'));
             if (isset($res1['id']) && $res1['id'] != $id) {
                 $this->error(lang('project_name_already_exists'));
             }
             if (isset($res2['id']) && $res2['id'] != $id) {
                 $this->error(lang('project_deploy_path_already_exists'));
             }
-            if (isset($res3['id']) && $res3['id'] != $id) {
+            /*if (isset($res3['id']) && $res3['id'] != $id) {
                 $this->error(lang('project_line_path_already_exists'));
-            }
+            }*/
             $res = $this->project_model->update('project',$data,array('id'=>$id));
             $res ? $this->success(lang('project_edit_success')) : $this->error(lang('project_edit_error'));
         }
