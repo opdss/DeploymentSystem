@@ -34,15 +34,24 @@ class Shell{
         $return = 0;
         exec($infoCmd, $info, $return);
         log_message('error',__METHOD__.' ==> '.$infoCmd);
-        if ($return != 0 || sizeof($info) != 10) {
+        if ($return != 0 || sizeof($info) < 10) {
             return '获取发布目录当前'.$revision.'SVN信息失败:'. implode("<br />", $info);
         }
+        $svnInfo = array();
+        foreach ($info as $item) {
+            if (!empty($item)) {
+                $offset = strpos($item, ':');
+                $svnInfo[trim(substr($item, 0, $offset))] = trim(substr($item, $offset+1));
+            }
+        }
+/*
         $svnInfo = array();
         $svnInfo['url'] = substr($info[1], strpos($info[1],'URL: ')+strlen('URL: '));
         $svnInfo['revision'] = substr($info[4], strpos($info[4],'Revision: ')+strlen('Revision: '));
         $svnInfo['modifier'] = substr($info[6], strpos($info[6],'Last Changed Author: ')+strlen('Last Changed Author: '));
         $svnInfo['modifyDate'] = substr($info[8], strpos($info[8],'Last Changed Date: ')+strlen('Last Changed Date: '));
-        return $svnInfo;
+*/ 
+    return $svnInfo;
     }
 
     // 获取工作拷贝的两个版本的DIFF信息
