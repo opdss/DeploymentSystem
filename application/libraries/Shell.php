@@ -44,6 +44,10 @@ class Shell{
                 $svnInfo[trim(substr($item, 0, $offset))] = trim(substr($item, $offset+1));
             }
         }
+        $svnInfo['url'] = $svnInfo['URL'];
+        $svnInfo['revision'] = $svnInfo['Revision'];
+        $svnInfo['modifier'] = $svnInfo['Last Changed Author'];
+        $svnInfo['modifyDate'] = $svnInfo['Last Changed Date'];
 /*
         $svnInfo = array();
         $svnInfo['url'] = substr($info[1], strpos($info[1],'URL: ')+strlen('URL: '));
